@@ -52,7 +52,7 @@ class Picture(models.Model):
             width = 2048
             height = 1536
             top_row = 36
-            hd_height = int(round((width / 1080) * 1920))
+            hd_height = int(round((width * 1080) / 1920))
             bottom_row = hd_height + top_row
     
             # File stats
@@ -70,6 +70,7 @@ class Picture(models.Model):
     
             # Color info (Clouds only)
             imclouds = im.crop((0,top_row,width,bottom_row))
+            imclouds.save("/tmp/" + pic.filename)
             cloudstats = ImageStat.Stat(imclouds)
             exc = cloudstats.extrema
     
