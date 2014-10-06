@@ -26,7 +26,8 @@ SECRET_KEY = 'df1r6-*b*t)(q&!+ih(wf=i^cno!1a0p_uu551l+@#8l7hp%_^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-TEMPLATE_DEBUG = False
+#TEMPLATE_DEBUG = False
+TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -41,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'djcelery',
+    'pictures',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -61,10 +63,20 @@ WSGI_APPLICATION = 'daystrips.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 
+#DATABASES = {
+    #'default': {
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #}
+#}
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE'   : 'django.db.backends.postgresql_psycopg2',
+        'NAME'     : 'daystrips',
+        'USER'     : '',
+        'PASSWORD' : '',
+        'HOST'     : 'localhost',
+        'PORT'     : '5432'
     }
 }
 
