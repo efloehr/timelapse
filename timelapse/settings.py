@@ -55,9 +55,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'daystrips.urls'
+ROOT_URLCONF = 'timelapse.urls'
 
-WSGI_APPLICATION = 'daystrips.wsgi.application'
+WSGI_APPLICATION = 'timelapse.wsgi.application'
 
 
 # Database
