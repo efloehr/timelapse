@@ -73,10 +73,10 @@ DATABASES = {
     'default': {
         'ENGINE'   : 'django.db.backends.postgresql_psycopg2',
         'NAME'     : 'daystrips',
-        'USER'     : '',
-        'PASSWORD' : '',
-        'HOST'     : 'localhost',
-        'PORT'     : '5432'
+#        'USER'     : 'efloehr',
+#        'PASSWORD' : '',
+#        'HOST'     : 'localhost',
+#        'PORT'     : '5432'
     }
 }
 

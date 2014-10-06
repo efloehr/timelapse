@@ -37,8 +37,11 @@ class Picture(models.Model):
         ordering = ['timestamp']
 
     @classmethod
-    def insert(cls, filepath):
-        (pic, created) = cls.objects.get_or_create(filepath=filepath)
+    def insert(cls, filepath, check_for_existing):
+        if check_for_existing:
+            (pic, created) = cls.objects.get_or_create(filepath=filepath)
+        else:
+            pic = cls()
         try:
             # Load image, exif, and file information
             im = Image.open(filepath)
