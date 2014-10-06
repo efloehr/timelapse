@@ -1,5 +1,5 @@
 """
-Django settings for daystrips project.
+Django settings for timelapse project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.7/topics/settings/
@@ -72,11 +72,7 @@ WSGI_APPLICATION = 'daystrips.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE'   : 'django.db.backends.postgresql_psycopg2',
-        'NAME'     : 'daystrips',
-#        'USER'     : 'efloehr',
-#        'PASSWORD' : '',
-#        'HOST'     : 'localhost',
-#        'PORT'     : '5432'
+        'NAME'     : 'timelapse',
     }
 }
 
