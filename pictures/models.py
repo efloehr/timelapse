@@ -70,7 +70,6 @@ class Picture(models.Model):
     
             # Color info (Clouds only)
             imclouds = im.crop((0,top_row,width,bottom_row))
-            imclouds.save("/tmp/" + pic.filename)
             cloudstats = ImageStat.Stat(imclouds)
             exc = cloudstats.extrema
     
