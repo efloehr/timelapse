@@ -1,4 +1,5 @@
 from datetime import timedelta
+import math
 
 def rgb_to_int(rgb_tuple):
     return int(round(rgb_tuple[0]*256*256 + rgb_tuple[1]*256 + rgb_tuple[2]))
@@ -12,7 +13,10 @@ def int_to_rgb(rgb_int):
 def normalize_time(timestamp, seconds_base=10):
     # Normalize to seconds_base seconds
     normalized_timestamp = timestamp
-    start_second = seconds_base * int(round(timestamp.second / float(seconds_base)))
+    #start_second = seconds_base * int(round(timestamp.second / float(seconds_base)))
+    # Can't use above because round, when presented with equal distance up or down, rounds to nearest even number
+    # Which causes things like 25 -> 30 but 35 -> 40
+    start_second = seconds_base * int(math.floor(timestamp.second / float(seconds_base) + 0.5))
     if start_second >= 60:
         normalized_timestamp = timestamp + timedelta(minutes=1)
         start_second = 0
