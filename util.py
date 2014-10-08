@@ -19,3 +19,9 @@ def normalize_time(timestamp, seconds_base=10):
     normalized_timestamp = normalized_timestamp.replace(second=start_second)
     return normalized_timestamp
     
+def get_fstop_exposure(exif_dict):
+    # Return fstop*100 and exposure in microseconds (millis * 1000)
+    fstop = int(round((exif_dict[33437][1][0] / float(exif_dict[33437][1][1])) * 100))
+    exposure = int(round((exif_dict[33434][1][0] / float(exif_dict[33434][1][1])) * 1000000))
+    return fstop, exposure
+    

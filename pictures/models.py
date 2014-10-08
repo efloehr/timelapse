@@ -5,7 +5,7 @@ import os.path
 from datetime import datetime, timedelta
 from pytz import utc
 from django.utils import timezone
-from util import rgb_to_int, normalize_time
+from util import rgb_to_int, normalize_time, get_fstop_exposure
 from copy import copy
 
 # Create your models here.
@@ -17,8 +17,8 @@ class Picture(models.Model):
     timestamp = models.DateTimeField(db_index=True, unique=True, null=True)
 
     # Exif Info
-    fstop = models.IntegerField(null=True) # Divide by 10 to get f-stop
-    exposure = models.IntegerField(null=True) # 1 divided by this number in seconds
+    fstop = models.IntegerField(null=True) # * 100
+    exposure = models.IntegerField(null=True) # in microseconds
 
     # Color Info (on clouds only)
     center_color = models.IntegerField(null=True)
@@ -66,8 +66,7 @@ class Picture(models.Model):
             pic.timestamp = timezone.make_aware(timestamp, utc)
             
             # Exif Info
-            pic.fstop = exif_dict[33437][1][0]
-            pic.exposure = int(round(exif_dict[33434][1][1] / exif_dict[33434][1][0]))
+            pic.fstop, pic.exposure = get_fstop_exposure(exif_dict)
     
             # Color info (Clouds only)
             imclouds = im.crop((0,top_row,width,bottom_row))
