@@ -103,16 +103,32 @@ class Normal(models.Model):
 
     @classmethod
     def insert_normals(cls):
-        bounds = Picture.objects.all().aggregate(Min('timestamp'), Max('timestamp'))
+        bounds = Picture.objects.all().aggregate(models.Min('timestamp'), models.Max('timestamp'))
         start = bounds['timestamp__min']
         end = bounds['timestamp__max']
 
         normalized_start = normalize_time(start, 10)
-        normalized_end = normalized_start(end, 10)
+        normalized_end = normalize_time(end, 10)
         
         current_time = copy(normalized_start)
         
         while current_time <= normalized_end:
-            time_entry, created = cls.get_or_create(timestamp=current_time)
+            time_entry, created = cls.objects.get_or_create(timestamp=current_time)
             current_time = current_time + timedelta(seconds=10)
         
+
+    @classmethod
+    def match_pictures(cls):
+        pictures = Picture.objects.all()
+        
+        for picture in pictures:
+            normalized_time = normalize_time(picture.timestamp, 10)
+            time_entry, created = cls.objects.get_or_create(timestamp=normalized_time)
+            if time_entry.picture is not None:
+                print("Existing picture at {0}, was going to insert {1}, but {2} there".format(normalized_time, picture.id, time_entry.picture.id))
+            else:
+                time_entry.picture = picture
+                time_entry.save()
+                if created:
+                    print("Had to create normal entry for {0}".format(normalized_time))
+            
