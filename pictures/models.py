@@ -2,10 +2,11 @@ from django.db import models
 from PIL import Image, ImageStat
 import pyxif
 import os.path
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import utc
 from django.utils import timezone
-from util import rgb_to_int
+from util import rgb_to_int, normalize_time
+from copy import copy
 
 # Create your models here.
 class Picture(models.Model):
@@ -59,14 +60,14 @@ class Picture(models.Model):
             pic.filepath = filepath
             pic.filename = os.path.basename(filepath)
             pic.size = filestat.st_size
-
+    
             # Timestamp (UTC) 2014-06-16-00-00-02.jpg
             timestamp = datetime.strptime(pic.filename.split('.')[0], '%Y-%m-%d-%H-%M-%S')
             pic.timestamp = timezone.make_aware(timestamp, utc)
             
             # Exif Info
             pic.fstop = exif_dict[33437][1][0]
-            pic.exposure = exif_dict[33434][1][1]
+            pic.exposure = int(round(exif_dict[33434][1][1] / exif_dict[33434][1][0]))
     
             # Color info (Clouds only)
             imclouds = im.crop((0,top_row,width,bottom_row))
@@ -90,3 +91,28 @@ class Picture(models.Model):
             pic.valid = False
 
         pic.save()
+
+
+class Normal(models.Model):
+    timestamp = models.DateTimeField(db_index=True)
+    picture = models.ForeignKey(Picture, null=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+
+
+    @classmethod
+    def insert_normals(cls):
+        bounds = Picture.objects.all().aggregate(Min('timestamp'), Max('timestamp'))
+        start = bounds['timestamp__min']
+        end = bounds['timestamp__max']
+
+        normalized_start = normalize_time(start, 10)
+        normalized_end = normalized_start(end, 10)
+        
+        current_time = copy(normalized_start)
+        
+        while current_time <= normalized_end:
+            time_entry, created = cls.get_or_create(timestamp=current_time)
+            current_time = current_time + timedelta(seconds=10)
+        
