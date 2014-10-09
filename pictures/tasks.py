@@ -25,7 +25,10 @@ def fix_fstop_exposure(picture_id):
 @task()
 def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, hd_ratio=False, start_row=0):
     normalized_start = normalize_time(start_time)
-    times = Normal.objects.filter(timestamp__hour=normalized_start.hour, timestamp__minute=normalized_start.minute, timestamp__second=normalized_start.second).iterator()
+    times = Normal.objects.filter(timestamp__gte=normalized_start,
+                                  timestamp__hour=normalized_start.hour,
+                                  timestamp__minute=normalized_start.minute,
+                                  timestamp__second=normalized_start.second).iterator()
     
     scale_width = int(round(float(frame_width) / columns))
     scale_ratio = (9.0 / 16.0) if hd_ratio else (3.0 / 4.0)
