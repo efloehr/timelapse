@@ -3,9 +3,11 @@ from .models import Picture, Normal
 import pyxif
 from util import get_fstop_exposure, normalize_time
 from datetime import datetime, timedelta
-from sky import est, sunsets, get_observer
+from sky import est, get_observer, sunset
 from PIL import Image
 import os.path
+from copy import copy
+
 
 @task()
 def insert(filepath, check_for_existing):
@@ -37,8 +39,21 @@ def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, 
 @task()
 def make_sunset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0):
     obs = get_observer()
-    frameimg = make_mosaic_image(sunsets(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row)
+    frameimg = make_mosaic_image(sunset_times(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row)
     frameimg.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
+
+
+def sunset_times(observer, start_date, offset_seconds=0):
+    # offset negative before, positive after
+    current_date = copy(start_date)
+    while 1:
+        sunset_time = normalize_time(sunset(observer, current_date) + timedelta(seconds=offset_seconds))
+        try:
+            normal_time = Normal.objects.get(timestamp=sunset_time)
+        except:
+            normal_time = None
+        yield normal_time
+        current_date = current_date + timedelta(days=1)
                 
                 
 def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row):
