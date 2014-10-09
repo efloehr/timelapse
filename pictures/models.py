@@ -124,8 +124,17 @@ class Normal(models.Model):
             normalized_time = normalize_time(picture.timestamp, 10)
             time_entry, created = cls.objects.get_or_create(timestamp=normalized_time)
             if time_entry.picture is not None:
-                print("Existing picture at {0}, was going to insert {1}({2}), but {3}({4}) there".format(
-                    normalized_time, picture.timestamp, picture.id, time_entry.picture.timestamp, time_entry.picture.id))
+                # Is the previous normalized time entry there, if so, move current to that one and place this one here
+                previous_time_entry, created = cls.objects.get_or_create(timestamp=normalized_time - timedelta(seconds=10))
+                if previous_time_entry.picture is None:
+                    previous_time_entry.picture = time_entry.picture
+                    time_entry.picture = picture
+                    previous_time_entry.save()
+                    time_entry.save()
+                else:
+                    print("Existing picture at {0} ({2}) and at {1} ({3})".format(
+                        time_entry.timestamp, previous_time_entry.timestamp, time_entry.picture_id, previous_time_entry.id))
+                    print("    Won't enter {0} ({1})".format(picture.timestamp, picture.id))
             else:
                 time_entry.picture = picture
                 time_entry.save()
