@@ -13,4 +13,4 @@ class Command(BaseCommand):
         frames = Normal.objects.filter(timestamp__gte=start, timestamp__lt=end)
         
         for sequence_no, frame in enumerate(frames):
-            make_mosaic_frame.delay('/var/tlwork', sequence_no+1, frame.timestamp, 20, 1920, True, 36)
+            make_mosaic_frame.delay('/var/tlwork/mosaic', sequence_no+1, frame.timestamp, 20, 1920, True, 36)
