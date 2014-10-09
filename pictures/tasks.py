@@ -3,7 +3,7 @@ from .models import Picture, Normal
 import pyxif
 from util import get_fstop_exposure, normalize_time
 from datetime import datetime, timedelta
-from sky import est
+#from sky import est
 from PIL import Image
 import os.path
 
@@ -25,7 +25,7 @@ def fix_fstop_exposure(picture_id):
 @task()
 def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, hd_ratio=False, start_row=0):
     normalized_start = normalize_time(start_time)
-    times = Normal.objects.filter(hour=normalized_start.hour, mintue=normalized_start.minute, second=normalized_start.second)
+    times = Normal.objects.filter(timestamp__hour=normalized_start.hour, timestamp__minute=normalized_start.minute, timestamp__second=normalized_start.second).iterator()
     
     scale_width = int(round(float(frame_width) / columns))
     scale_ratio = (9.0 / 16.0) if hd_ratio else (3.0 / 4.0)
@@ -41,18 +41,19 @@ def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, 
         row_offset = row_no * scale_height
         for column_no in range(0,columns):
             column_offset = column_no * scale_width
-            try:
-                time = times.next()
-            except:
-                continue
+            #try:
+            time = next(times)
+            #except:
+            #    continue
             if time.picture is not None:
-                img = Image.open(time.picture)
-                cropbox = (0, start_row, img.width, start_row + int(round(img.width * scale_ratio)))
-                img = img.crop(crobbox)
+                img = Image.open(time.picture.filepath)
+                imgwidth, imgheight = img.size
+                cropbox = (0, start_row, imgwidth, start_row + int(round(imgwidth * scale_ratio)))
+                img = img.crop(cropbox)
                 img = img.resize((scale_width, scale_height))
                 imgloc = (column_offset, row_offset)
                 frameimg.paste(img, imgloc)
     
-    frameimg.save(os.path.join(directory, "{08d}.jpg"))
+    frameimg.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
                 
                 
