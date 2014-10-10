@@ -1,5 +1,6 @@
 from datetime import timedelta
 import math
+import subprocess
 
 def rgb_to_int(rgb_tuple):
     return int(round(rgb_tuple[0]*256*256 + rgb_tuple[1]*256 + rgb_tuple[2]))
@@ -28,4 +29,17 @@ def get_fstop_exposure(exif_dict):
     fstop = int(round((exif_dict[33437][1][0] / float(exif_dict[33437][1][1])) * 100))
     exposure = int(round((exif_dict[33434][1][0] / float(exif_dict[33434][1][1])) * 1000000))
     return fstop, exposure
+    
+
+def make_movie(dirpath, name, framerate):
+    subprocess.check_call(['ffmpeg',
+                           '-framerate {0}'.format(framerate),
+                           '-i {0}/%08d.jpg'.format(dirpath),
+                           '-s hd1080',
+                           '-c:v libx264',
+                           '-profile:v high',
+                           '-preset slow',
+                           '-pix_fmt yuv420p'
+                           '{0}.mp4'.format(name)
+                           ])
     
