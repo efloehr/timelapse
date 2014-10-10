@@ -46,14 +46,14 @@ def make_sunset_synchro_frame(directory, sequence_no, start_day, seconds_until_s
 def sunset_times(observer, start_date, offset_seconds=0):
     # offset negative before, positive after
     current_date = copy(start_date)
-    while 1:
+    while True:
         sunset_time = normalize_time(sunset(observer, current_date) + timedelta(seconds=offset_seconds))
         try:
             normal_time = Normal.objects.get(timestamp=sunset_time)
         except:
             normal_time = None
         yield normal_time
-        current_date = current_date + timedelta(days=1)
+        current_date += timedelta(days=1)
                 
                 
 def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row):
