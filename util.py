@@ -20,7 +20,7 @@ def normalize_time(timestamp, seconds_base=10):
     if start_second >= 60:
         normalized_timestamp = timestamp + timedelta(minutes=1)
         start_second = 0
-    normalized_timestamp = normalized_timestamp.replace(second=start_second)
+    normalized_timestamp = normalized_timestamp.replace(second=start_second).replace(microsecond=0)
     return normalized_timestamp
     
 def get_fstop_exposure(exif_dict):
