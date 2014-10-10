@@ -171,7 +171,7 @@ def make_all_night_image(day):
         source_neg = ImageOps.invert(source_gray)
 
         # Threshold white
-        source_thresh = Image.eval(source_neg, lambda x: 255*(x>210))
+        source_thresh = Image.eval(source_neg, lambda x: 255*(x>224))
         
         # Scale
         source_scaled = source_thresh.resize((1440,1080))
