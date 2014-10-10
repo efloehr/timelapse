@@ -4,7 +4,7 @@ import pyxif
 from util import get_fstop_exposure, normalize_time, make_movie
 from datetime import datetime, timedelta
 from sky import est, get_observer, sunset, sunrise
-from PIL import Image
+from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 from copy import copy
 
@@ -117,8 +117,8 @@ def make_daylight_movie(day):
     sunrise_time = sunrise(obs, day_start)
     sunset_time = sunset(obs, day_start)
     
-    start_time = sunrise_time - timedelta(minutes=30)
-    end_time = sunset_time + timedelta(minutes=30)
+    start_time = sunrise_time - timedelta(minutes=60)
+    end_time = sunset_time + timedelta(minutes=60)
     
     make_standard_movie(start_time, end_time, 'daylight')
 
@@ -164,39 +164,40 @@ def make_all_night_image(day):
     img = Image.new("L", (1440,1080), background_color)
 
     for time in times:
-        source = Image.open(picture.filepath)
+        source = Image.open(time.picture.filepath)
     
         # Get the negative
         source_gray = ImageOps.grayscale(source)
         source_neg = ImageOps.invert(source_gray)
 
         # Threshold white
-        source_thresh = Image.eval(source_neg, lambda x: 255*(x>224))
+        source_thresh = Image.eval(source_neg, lambda x: 255*(x>210))
         
         # Scale
-        source_scaled = source_thresh.scale((1440,1080))
+        source_scaled = source_thresh.resize((1440,1080))
         
         # Merge in the new image
-        im = ImageChops.multiply(im, source_scaled)
+        img = ImageChops.multiply(img, source_scaled)
 
     # Put a date on the image
-    canvas = ImageDraw.Draw(im)
+    canvas = ImageDraw.Draw(img)
     canvas.text((20,1050), day.strftime("%Y-%m-%d"))
 
     # And save
     dirpath = '/var/tlwork/allnight'
-    filename = start_time.strftime('%y-%m-%d') + '.jpg'
+    filename = start_time.strftime('%Y-%m-%d') + '.jpg'
     
     # Make directory if it doesn't exist
     os.makedirs(dirpath, exist_ok=True)
 
-    im.save(os.path.join(dirpath, filename))
+    img.save(os.path.join(dirpath, filename))
 
 
 def make_standard_movie(start_time, end_time, subdir):
-    day_dir = start_time.strftime('%y-%m-%d')
+    day_dir = start_time.strftime('%Y-%m-%d')
     dirpath = os.path.join(base_daily_dir, day_dir, subdir)
-    
+    movie_name = day_dir
+ 
     # Make directory if it doesn't exist
     os.makedirs(dirpath, exist_ok=True)
 
@@ -211,4 +212,4 @@ def make_standard_movie(start_time, end_time, subdir):
             make_black_1080p_image(normal.timestamp, dirpath, sequence_no+1)
 
     # Make the movie
-    make_movie(dirpath, subdir, 24)
+    make_movie(dirpath, movie_name, 24)
