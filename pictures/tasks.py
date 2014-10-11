@@ -8,6 +8,7 @@ from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 from copy import copy
 import itertools
+from pytz import utc
 
 
 @task()
@@ -87,10 +88,10 @@ def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row):
 
 @task()
 def make_year_stripe_frame(directory, sequence_no, start_time):
-    start_day = datetime.combine(start_time, time(0, tzinfo=est))
+    start_day = datetime.combine(start_time, time(0, tzinfo=est)).astimezone(utc)
     end_day = start_day - timedelta(days=1)
     
-    normalized_start = normalize_time(start_time)
+    normalized_start = normalize_time(start_time.astimezone(utc))
     first_times = Normal.objects.filter(timestamp__gte=start_day, timestamp__lte='2014-09-27',
                                         timestamp__hour=normalized_start.hour,
                                         timestamp__minute=normalized_start.minute,
@@ -110,7 +111,7 @@ def make_year_stripe_frame(directory, sequence_no, start_time):
         else:
             img = Image.new("RGB", (2048,1536))
         start_column = (int(round(strip_width * day_no)))
-        img.crop(start_column,0,2048,1536)
+        img = img.crop((start_column,0,2048,1536))
         frameimg.paste(img, (start_column,0))
     
     frameimg = frameimg.crop((0,456,2048,1536))
