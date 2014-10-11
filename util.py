@@ -32,7 +32,7 @@ def get_fstop_exposure(exif_dict):
     return fstop, exposure
     
 
-def make_movie(dirpath, name, framerate):
+def make_movie(dirpath, moviedir, name, framerate):
     subprocess.check_call(['ffmpeg',
                            '-framerate', '{0}'.format(framerate),
                            '-i', os.path.join(dirpath,'%08d.jpg'),
@@ -41,6 +41,6 @@ def make_movie(dirpath, name, framerate):
                            '-profile:v', 'high',
                            '-preset', 'slow',
                            '-pix_fmt', 'yuv420p',
-                           os.path.join(dirpath,name + '.mp4')
+                           os.path.join(moviedir, name + '.mp4')
                            ])
     

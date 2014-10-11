@@ -103,7 +103,9 @@ def make_all_day_movie(day):
     # Normalize to midnight
     start_time = datetime(day.year, day.month, day.day, tzinfo=est)
     end_time = start_time + timedelta(days=1)
-    make_standard_movie(start_time, end_time, 'all_day')
+    
+    subdir = 'all_day'
+    make_standard_movie(start_time, end_time, subdir)
 
 
 # ... daylight
@@ -120,7 +122,8 @@ def make_daylight_movie(day):
     start_time = sunrise_time - timedelta(minutes=60)
     end_time = sunset_time + timedelta(minutes=60)
     
-    make_standard_movie(start_time, end_time, 'daylight')
+    subdir = 'daylight'
+    make_standard_movie(start_time, end_time, subdir)
 
 # ... overnight
 @task()
@@ -138,7 +141,8 @@ def make_overnight_movie(day):
     start_time = sunset_time
     end_time = sunrise_time
     
-    make_standard_movie(start_time, end_time, 'overnight')
+    subdir = 'overnight'
+    make_standard_movie(start_time, end_time, subdir)
 
 # /var/tlwork/allnight
 @task()
@@ -198,9 +202,12 @@ def make_standard_movie(start_time, end_time, subdir):
     day_dir = start_time.strftime('%Y-%m-%d')
     dirpath = os.path.join(base_daily_dir, day_dir, subdir)
     movie_name = day_dir
+
+    moviedir = os.path.join(base_daily_dir, 'movies', subdir)
  
     # Make directory if it doesn't exist
     os.makedirs(dirpath, exist_ok=True)
+    os.makedirs(moviedir, exist_ok=True)
 
     # Get normal times/images
     normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lt=end_time)
@@ -213,4 +220,4 @@ def make_standard_movie(start_time, end_time, subdir):
             make_black_1080p_image(normal.timestamp, dirpath, sequence_no+1)
 
     # Make the movie
-    make_movie(dirpath, movie_name, 24)
+    make_movie(dirpath, moviedir, movie_name, 24)
