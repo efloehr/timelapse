@@ -2,11 +2,12 @@ from celery import task
 from .models import Picture, Normal
 import pyxif
 from util import get_fstop_exposure, normalize_time, make_movie
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from sky import est, get_observer, sunset, sunrise
 from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 from copy import copy
+import itertools
 
 
 @task()
@@ -82,7 +83,42 @@ def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row):
                 imgloc = (column_offset, row_offset)
                 frameimg.paste(img, imgloc)
     return frameimg
-                
+
+
+@task()
+def make_year_stripe_frame(directory, sequence_no, start_time):
+    start_day = datetime.combine(start_time, time(0, tzinfo=est))
+    end_day = start_day - timedelta(days=1)
+    
+    normalized_start = normalize_time(start_time)
+    first_times = Normal.objects.filter(timestamp__gte=start_day, timestamp__lte='2014-09-27',
+                                        timestamp__hour=normalized_start.hour,
+                                        timestamp__minute=normalized_start.minute,
+                                        timestamp__second=normalized_start.second).iterator()
+    second_times = Normal.objects.filter(timestamp__gt='2013-09-27', timestamp__lte=end_day,
+                                         timestamp__hour=normalized_start.hour,
+                                         timestamp__minute=normalized_start.minute,
+                                         timestamp__second=normalized_start.second).iterator()
+    
+    normals = itertools.chain(first_times, second_times)
+    
+    frameimg = Image.new("RGB", (2048,1536))
+    strip_width = 2048.0 / 365
+    for day_no, normal in enumerate(normals):
+        if normal.picture is not None:
+            img = Image.open(normal.picture.filepath)
+        else:
+            img = Image.new("RGB", (2048,1536))
+        start_column = (int(round(strip_width * day_no)))
+        img.crop(start_column,0,2048,1536)
+        frameimg.paste(img, (start_column,0))
+    
+    frameimg = frameimg.crop((0,456,2048,1536))
+    frameimg = frameimg.resize((1920,1080))
+    frameimg.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
+
+    
+    
 # /var/tlwork/dailies
 # ... all_day
 base_daily_dir = '/var/tlwork/dailies'
