@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.db import models
 from pictures.models import Normal
 from datetime import datetime, timedelta
 from copy import copy
@@ -16,5 +17,6 @@ class Command(BaseCommand):
         current_day = copy(start_day)
         
         while current_day < end_day:
-            make_all_night_image(current_day)
+            print('Making task for {0}'.format(current_day))
+            make_all_night_image.delay(current_day)
             current_day += timedelta(days=1)

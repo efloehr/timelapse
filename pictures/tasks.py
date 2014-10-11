@@ -180,12 +180,13 @@ def make_all_night_image(day):
         img = ImageChops.multiply(img, source_scaled)
 
     # Put a date on the image
+    daystr = day.strftime('%Y-%m-%d')
     canvas = ImageDraw.Draw(img)
-    canvas.text((20,1050), day.strftime("%Y-%m-%d"))
+    canvas.text((20,1050), daystr)
 
     # And save
     dirpath = '/var/tlwork/allnight'
-    filename = start_time.strftime('%Y-%m-%d') + '.jpg'
+    filename = daystr + '.jpg'
     
     # Make directory if it doesn't exist
     os.makedirs(dirpath, exist_ok=True)
