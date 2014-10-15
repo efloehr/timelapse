@@ -3,7 +3,7 @@ from .models import Picture, Normal
 import pyxif
 from util import get_fstop_exposure, normalize_time, make_movie
 from datetime import datetime, timedelta, time
-from sky import est, get_observer, sunset, sunrise
+from sky import est, get_observer, sunset, sunrise, moonset
 from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 from copy import copy
@@ -39,16 +39,33 @@ def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, 
                 
 @task()
 def make_sunset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0):
+    make_set_synchro_frame(sunset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row)
+
+
+@task()
+def make_moonset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0):
+    make_set_synchro_frame(moonset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row)
+
+
+def make_set_synchro_frame(setgen, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row):
     obs = get_observer()
-    frameimg = make_mosaic_image(sunset_times(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row)
+    frameimg = make_mosaic_image(setgen(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row)
     frameimg.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
 
 
 def sunset_times(observer, start_date, offset_seconds=0):
+    set_times(sunset, observer, start_date, offset_seconds)
+
+
+def moonset_times(setfunc, observer, start_date, offset_seconds=0):
+    set_times(moonset, observer, start_date, offset_seconds)
+
+
+def set_times(setfunc, observer, start_date, offset_seconds=0):
     # offset negative before, positive after
     current_date = copy(start_date)
     while True:
-        sunset_time = normalize_time(sunset(observer, current_date) + timedelta(seconds=offset_seconds))
+        sunset_time = normalize_time(setfunc(observer, current_date) + timedelta(seconds=offset_seconds))
         try:
             normal_time = Normal.objects.get(timestamp=sunset_time)
         except:
