@@ -3,12 +3,12 @@ from pictures.models import Normal
 from pictures.tasks import make_mosaic_frame, make_sunset_synchro_frame, make_moonset_synchro_frame
 from datetime import datetime, timedelta
 from sky import est
+from optparse import make_option
 
 class Command(BaseCommand):
     help = 'Generates a set of mosaic images synchronized to set times'
     option_list = BaseCommand.option_list + (
             make_option('--body',
-                action='store_false',
                 dest='body',
                 default='sun',
                 help='Which celestial body to synch set to. Current options are "moon" and "sun"'
