@@ -55,11 +55,11 @@ def make_set_synchro_frame(setgen, directory, sequence_no, start_day, seconds_un
 
 
 def sunset_times(observer, start_date, offset_seconds=0):
-    set_times(sunset, observer, start_date, offset_seconds)
+    return set_times(sunset, observer, start_date, offset_seconds)
 
 
 def moonset_times(observer, start_date, offset_seconds=0):
-    set_times(moonset, observer, start_date, offset_seconds)
+    return set_times(moonset, observer, start_date, offset_seconds)
 
 
 def set_times(setfunc, observer, start_date, offset_seconds=0):
