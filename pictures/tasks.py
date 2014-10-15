@@ -58,7 +58,7 @@ def sunset_times(observer, start_date, offset_seconds=0):
     set_times(sunset, observer, start_date, offset_seconds)
 
 
-def moonset_times(setfunc, observer, start_date, offset_seconds=0):
+def moonset_times(observer, start_date, offset_seconds=0):
     set_times(moonset, observer, start_date, offset_seconds)
 
 
