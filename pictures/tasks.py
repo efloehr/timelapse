@@ -289,7 +289,7 @@ def make_daystrip(dirpath, day):
 
     day_end = day_start + timedelta(days=1)
     
-    normals = Normal.objects.get(timestamp__gte=day_start, timestamp__lt=day_end)
+    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
 
     img = Image.new("RGB", (2048,8640))
     
@@ -304,14 +304,14 @@ def make_daystrip(dirpath, day):
 
 
 @task()
-def make_daystrip_picture(day):
+def make_daystrip_picture(dirpath, day):
     # Normalize to midnight
     day_start = datetime(day.year, day.month, day.day, tzinfo=est)
     dayname = day.strftime('%Y-%m-%d')
 
     day_end = day_start + timedelta(days=1)
     
-    normals = Normal.objects.get(timestamp__gte=day_start, timestamp__lt=day_end)
+    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
 
     img = Image.new("RGB", (2048,1536))
 
@@ -327,7 +327,7 @@ def make_daystrip_picture(day):
         
         current_row = row
         picture = Image.open(normal.picture.filepath)
-        img.paste(picture.crop((0,row,2048,row+1)),(0,normal_no))
+        img.paste(picture.crop((0,row,2048,row+1)),(0,row))
 
     img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
 

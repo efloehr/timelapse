@@ -21,6 +21,6 @@ class Command(BaseCommand):
         # From 3 hours before to 1 hour after set
         for sequence_no, seconds_before_sunset in enumerate(range(5*60*60, -2*60*60, -10)):
             if options['body'] == 'moon':
-                make_moonset_synchro_frame.delay('/var/tlwork/moonset', sequence_no+1, start, seconds_before_sunset, 20, 1920, True, 140)
+                make_moonset_synchro_frame.delay('/var/tlwork/moonset', sequence_no+1, start, seconds_before_sunset, 30, 1920, False, 0,12)
             else:
                 make_sunset_synchro_frame.delay('/var/tlwork/sunset', sequence_no+1, start, seconds_before_sunset, 20, 1920, True, 140)

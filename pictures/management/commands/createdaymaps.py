@@ -5,6 +5,8 @@ import pictures.tasks as tasks
 from PIL import Image, ImageDraw
 from sky import est
 from util import int_to_rgb
+from datetime import datetime, time
+import os.path
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
@@ -36,9 +38,10 @@ class Command(BaseCommand):
                 continue
             
             timestamp = normal.timestamp.astimezone(est)
+            datestamp = datetime.combine(timestamp.date(), time(tzinfo=est))
 
             y = (timestamp - start).days
-            x = int(round((timestamp - timestamp.date()).seconds / 10))
+            x = int(round((timestamp - datestamp).seconds / 10))
             pos = (x,y)
 
             # Paint pixels
