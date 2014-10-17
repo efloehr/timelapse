@@ -354,7 +354,7 @@ def make_daystrip_picture_vert(dirpath, day):
         if column == current_col:
             continue
         
-        current_col = col
+        current_col = column
         picture = Image.open(normal.picture.filepath)
         img.paste(picture.crop((column,0,column+1,1536)),(column,0))
 
