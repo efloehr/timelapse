@@ -39,18 +39,18 @@ def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, 
                 
                 
 @task()
-def make_sunset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0):
-    make_set_synchro_frame(sunset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row)
+def make_sunset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0, rows=None):
+    make_set_synchro_frame(sunset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row, rows)
 
 
 @task()
-def make_moonset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0):
-    make_set_synchro_frame(moonset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row)
+def make_moonset_synchro_frame(directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio=False, start_row=0, rows=None):
+    make_set_synchro_frame(moonset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row, rows)
 
 
-def make_set_synchro_frame(setgen, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row):
+def make_set_synchro_frame(setgen, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row, rows=None):
     obs = get_observer()
-    frameimg = make_mosaic_image(setgen(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row)
+    frameimg = make_mosaic_image(setgen(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row, rows)
     frameimg.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
 
 
@@ -75,12 +75,15 @@ def set_times(setfunc, observer, start_date, offset_seconds=0):
         current_date += timedelta(days=1)
                 
                 
-def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row):
+def make_mosaic_image(times, frame_width, columns, hd_ratio, start_row, rows=None):
     scale_width = int(round(float(frame_width) / columns))
     scale_ratio = (9.0 / 16.0) if hd_ratio else (3.0 / 4.0)
     scale_height = int(round(scale_width * scale_ratio))
-    frame_height = int(round(frame_width * scale_ratio))
-    rows = int(round(frame_height / float(scale_height)))
+    if rows == None:
+        frame_height = int(round(frame_width * scale_ratio))
+        rows = int(round(frame_height / float(scale_height)))
+    else:
+        frame_height = rows * scale_height
     
     frameimg = Image.new("RGB", (frame_width, frame_height))
 
