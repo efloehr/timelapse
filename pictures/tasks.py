@@ -9,6 +9,7 @@ import os.path
 from copy import copy
 import itertools
 from pytz import utc
+import math
 
 
 @task()
@@ -278,3 +279,56 @@ def make_standard_movie(start_time, end_time, subdir):
 
     # Make the movie
     make_movie(dirpath, moviedir, movie_name, 24)
+
+
+@task()
+def make_daystrip(dirpath, day):
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+    dayname = day.strftime('%Y-%m-%d')
+
+    day_end = day_start + timedelta(days=1)
+    
+    normals = Normal.objects.get(timestamp__gte=day_start, timestamp__lt=day_end)
+
+    img = Image.new("RGB", (2048,8640))
+    
+    for row, normal in enumerate(normals):
+        if normal.picture is None:
+            continue
+    
+        picture = Image.open(normal.picture.filepath)
+        img.paste(picture.crop((0,400,2048,401)),(0,row))
+
+    img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
+
+
+@task()
+def make_daystrip_picture(day):
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+    dayname = day.strftime('%Y-%m-%d')
+
+    day_end = day_start + timedelta(days=1)
+    
+    normals = Normal.objects.get(timestamp__gte=day_start, timestamp__lt=day_end)
+
+    img = Image.new("RGB", (2048,1536))
+
+    current_row = None
+    for normal_no, normal in enumerate(normals):
+        if normal.picture is None:
+            continue
+    
+        row = int(math.floor(1536 * (normal_no / 8640.0)))
+        
+        if row == current_row:
+            continue
+        
+        current_row = row
+        picture = Image.open(normal.picture.filepath)
+        img.paste(picture.crop((0,row,2048,row+1)),(0,normal_no))
+
+    img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
+
+
