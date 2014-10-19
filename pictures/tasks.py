@@ -49,6 +49,18 @@ def make_moonset_synchro_frame(directory, sequence_no, start_day, seconds_until_
     make_set_synchro_frame(moonset_times, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row, rows)
 
 
+@task()
+def make_sunset_frames(directory, start_day, seconds_until_sunset):
+    obs = get_observer()
+    os.makedirs(directory, exist_ok=True)
+    for sequence_no, time in enumerate(sunset_times(obs, start_date, seconds_until_sunset)):
+        if time.picture is None:
+            continue
+        img = Image.open(time.picture.dirpath)
+        img = img.resize((1920,1080))
+        img.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
+        
+
 def make_set_synchro_frame(setgen, directory, sequence_no, start_day, seconds_until_set, columns, frame_width, hd_ratio, start_row, rows=None):
     obs = get_observer()
     frameimg = make_mosaic_image(setgen(obs, start_day, -seconds_until_set), frame_width, columns, hd_ratio, start_row, rows)
