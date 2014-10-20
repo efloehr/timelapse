@@ -57,6 +57,7 @@ def make_sunset_frames(directory, start_date, seconds_until_sunset):
         if time.picture is None:
             continue
         img = Image.open(time.picture.filepath)
+        img = Image.eval(img, lambda x: 255*math.pow((x/255.0),6))
         img = img.resize((1920,1080))
         img.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
         
