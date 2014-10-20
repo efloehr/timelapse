@@ -50,13 +50,13 @@ def make_moonset_synchro_frame(directory, sequence_no, start_day, seconds_until_
 
 
 @task()
-def make_sunset_frames(directory, start_day, seconds_until_sunset):
+def make_sunset_frames(directory, start_date, seconds_until_sunset):
     obs = get_observer()
     os.makedirs(directory, exist_ok=True)
     for sequence_no, time in enumerate(sunset_times(obs, start_date, seconds_until_sunset)):
         if time.picture is None:
             continue
-        img = Image.open(time.picture.dirpath)
+        img = Image.open(time.picture.filepath)
         img = img.resize((1920,1080))
         img.save(os.path.join(directory, "{0:08d}.jpg".format(sequence_no)))
         

@@ -16,7 +16,8 @@ class Command(BaseCommand):
         end = bounds['timestamp__max'].astimezone(est)
         days = (end - start).days + 1
         start_day = start.date()
-        
+        start_date = datetime.combine(start_day, time(tzinfo=est))
+ 
         # Images will be 8640 pixels across and down the number of days in the set
         #center_color = models.IntegerField(null=True)
         im_center = Image.new('RGB', (8640,days))
@@ -40,7 +41,7 @@ class Command(BaseCommand):
             timestamp = normal.timestamp.astimezone(est)
             datestamp = datetime.combine(timestamp.date(), time(tzinfo=est))
 
-            y = (timestamp - start).days
+            y = (timestamp - start_date).days
             x = int(round((timestamp - datestamp).seconds / 10))
             pos = (x,y)
 
