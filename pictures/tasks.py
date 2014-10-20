@@ -10,6 +10,7 @@ from copy import copy
 import itertools
 from pytz import utc
 import math
+from glob import iglob
 
 
 @task()
@@ -374,3 +375,22 @@ def make_daystrip_picture_vert(dirpath, day):
     img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
 
 
+@task()
+def lighten_and_multiply(directory):
+    images = iglob(os.path.join(directory,'*.jpg'))
+    lightimg = None
+    multimg = None
+    for image in images:
+        if lightimg is None:
+            lightimg = image
+        else:
+            lightimg = ImageChops.lighter(lightimg, image)
+        if multimg is None:
+            multimg = image
+        else:
+            multimg = ImageChops.multiply(multimg, image)
+            
+    lightimg.save(os.path.join(directory, 'light.png'))
+    multimg.save(os.path.join(directory, 'mult.png'))
+        
+        
