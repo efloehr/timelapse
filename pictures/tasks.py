@@ -393,5 +393,3 @@ def lighten_and_multiply(directory):
             
     lightimg.save(os.path.join(directory, 'light.png'))
     multimg.save(os.path.join(directory, 'mult.png'))
-        
-        
