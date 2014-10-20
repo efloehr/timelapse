@@ -376,20 +376,12 @@ def make_daystrip_picture_vert(dirpath, day):
 
 
 @task()
-def lighten_and_multiply(directory):
+def make_sun_path(directory):
     images = iglob(os.path.join(directory,'*.jpg'))
-    lightimg = None
-    multimg = None
+    lightimg = next(images)
     for imagepath in images:
-        image = Image.open(imagepath)
-        if lightimg is None:
-            lightimg = image
-        else:
-            lightimg = ImageChops.lighter(lightimg, image)
-        if multimg is None:
-            multimg = image
-        else:
-            multimg = ImageChops.multiply(multimg, image)
+        img = Image.open(imagepath)
+        img = Image.eval(img, lambda x: 255*math.pow((x/255.0),16))
+        lightimg = ImageChops.lighter(lightimg, img)
             
-    lightimg.save(os.path.join(directory, 'light.png'))
-    multimg.save(os.path.join(directory, 'mult.png'))
+    lightimg.save(os.path.join(directory, 'sunpath.png'))
