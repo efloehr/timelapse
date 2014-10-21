@@ -238,7 +238,8 @@ def make_all_night_image(day):
     times = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, picture__id__isnull=False)
     
     img = Image.new("L", (1440,1080), background_color)
-
+    img_light = None
+    
     for time in times:
         source = Image.open(time.picture.filepath)
     
@@ -254,21 +255,33 @@ def make_all_night_image(day):
         
         # Merge in the new image
         img = ImageChops.multiply(img, source_scaled)
+        
+        # Make light image
+        if img_light is None:
+            img_light = source
+        else:
+            img_light = ImageChops.lighter(img_light, source)
+            
 
     # Put a date on the image
     daystr = day.strftime('%Y-%m-%d')
     canvas = ImageDraw.Draw(img)
     canvas.text((20,1050), daystr)
+    canvas = ImageDraw.Draw(img_light)
+    canvas.text((20,1050), daystr)
 
     # And save
     dirpath = '/var/tlwork/allnight'
-    filename = daystr + '.jpg'
+    filename = daystr + '.png'
+    filename_light = daystr + '_light.png'
+    filename_light_neg = daystr + '_light_neg.png'
     
     # Make directory if it doesn't exist
     os.makedirs(dirpath, exist_ok=True)
 
     img.save(os.path.join(dirpath, filename))
-
+    img_light.save(os.path.join(dirpath, filename_light))
+    ImageOps.invert(img_light).save(os.path.join(dirpath, filename_light_neg))
 
 def make_standard_movie(start_time, end_time, subdir):
     day_dir = start_time.strftime('%Y-%m-%d')
