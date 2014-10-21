@@ -378,10 +378,11 @@ def make_daystrip_picture_vert(dirpath, day):
 @task()
 def make_sun_path(directory):
     images = iglob(os.path.join(directory,'*.jpg'))
-    lightimg = next(images)
+    lightimg = Image.open(next(images))
     for imagepath in images:
         img = Image.open(imagepath)
-        img = Image.eval(img, lambda x: 255*math.pow((x/255.0),16))
+        img = Image.eval(img, lambda x: 255*math.pow((x/255.0),8))
         lightimg = ImageChops.lighter(lightimg, img)
             
+    lightimg = Image.eval(lightimg, lambda x: 255*math.pow((x/255.0),8))
     lightimg.save(os.path.join(directory, 'sunpath.png'))
