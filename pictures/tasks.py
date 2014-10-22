@@ -237,7 +237,7 @@ def make_all_night_image(day):
     
     times = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, picture__id__isnull=False)
     
-    img = Image.new("L", (1440,1080), background_color)
+    img = Image.new("L", (2048,1536), background_color)
     img_light = None
     
     for time in times:
@@ -250,11 +250,8 @@ def make_all_night_image(day):
         # Threshold white
         source_thresh = Image.eval(source_neg, lambda x: 255*(x>224))
         
-        # Scale
-        source_scaled = source_thresh.resize((1440,1080))
-        
         # Merge in the new image
-        img = ImageChops.multiply(img, source_scaled)
+        img = ImageChops.multiply(img, source_thresh)
         
         # Make light image
         if img_light is None:
@@ -266,9 +263,9 @@ def make_all_night_image(day):
     # Put a date on the image
     daystr = day.strftime('%Y-%m-%d')
     canvas = ImageDraw.Draw(img)
-    canvas.text((20,1050), daystr)
+    canvas.text((20,1500), daystr)
     canvas = ImageDraw.Draw(img_light)
-    canvas.text((20,1050), daystr)
+    canvas.text((20,1500), daystr)
 
     # And save
     dirpath = '/var/tlwork/allnight'
