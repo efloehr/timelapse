@@ -17,7 +17,7 @@ class Command(BaseCommand):
         days = (end - start).days + 1
         start_day = start.date()
         start_date = datetime.combine(start_day, time(tzinfo=est))
- 
+        print(start_date)
         # Images will be 8640 pixels across and down the number of days in the set
         #center_color = models.IntegerField(null=True)
         im_center = Image.new('RGB', (8640,days))
@@ -44,7 +44,7 @@ class Command(BaseCommand):
             y = (timestamp - start_date).days
             x = int(round((timestamp - datestamp).seconds / 10))
             pos = (x,y)
-
+            print (x,y)
             # Paint pixels
             color_center = int_to_rgb(normal.picture.center_color)
             im_center.putpixel(pos, color_center)
