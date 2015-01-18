@@ -2,3 +2,7 @@ For building Pillow in virtualenv:
 Ubuntu: python3-dev tk-dev tcl-dev libjpeg-dev libtiff-dev libfreetype6-dev liblcms2-dev libwebp-dev postgresql-dev
 Fedora/CentOS: python3-devel tk-devel tcl-devel libjpeg-turbo-devel libtiff-devel freetype-devel lcms2-devel libwebp-devel postgresql-devel
 
+createdb timelapse
+python manage.py makemigrations
+python manage.py syncdb
+

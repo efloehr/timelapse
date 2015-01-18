@@ -42,7 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'djcelery',
-    'pictures',
+    'image',
 )
 
 MIDDLEWARE_CLASSES = (
