@@ -4,6 +4,7 @@
 # from stdin or as command line arguments
 import fileinput
 from image.models import Normal
+from image.tasks import insert
 
 # Make sure our normals are up-to-date
 Normal.update_normals()
@@ -14,4 +15,4 @@ for line in fileinput.input():
     line = line.strip()
     # If this line was from the command line, it will have spaces
     for filename in line.split():
-        print filename
+        insert.delay(filename)
