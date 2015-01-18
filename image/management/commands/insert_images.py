@@ -23,10 +23,10 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
         # Make sure our normals are up-to-date
-        Normal.update_normals()
+        #Normal.update_normals()
         
         # Go through the list of files
-        for line in fileinput.input():
+        for line in fileinput.input(args):
             # Remove spaces and new lines
             line = line.strip()
             insert.delay(filename)
