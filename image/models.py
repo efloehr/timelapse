@@ -113,14 +113,14 @@ class Normal(models.Model):
         if end_time is None:
             end_time = datetime.now()
 
-        normalized_start = normalize_time(start_time, SECONDS_BASE)
-        normalized_end = normalize_time(end_time, SECONDS_BASE)
+        normalized_start = normalize_time(start_time, cls.SECONDS_BASE)
+        normalized_end = normalize_time(end_time, cls.SECONDS_BASE)
         
         current_time = copy(normalized_start)
         
         while current_time <= normalized_end:
             time_entry, created = cls.objects.get_or_create(timestamp=current_time)
-            current_time = current_time + timedelta(seconds=SECONDS_BASE)
+            current_time = current_time + timedelta(seconds=cls.SECONDS_BASE)
     
     
     @classmethod
@@ -135,7 +135,7 @@ class Normal(models.Model):
     @transaction.atomic
     def match_image(cls, image_info, normal_entry=None, rejected_normal=None):
         # Get the normalized time for the image
-        normalized_time = normalize_time(image_info.timestamp, SECONDS_BASE)
+        normalized_time = normalize_time(image_info.timestamp, cls.SECONDS_BASE)
 
         # Get a normal entry if not provided one
         if normal_entry is None:
@@ -160,9 +160,9 @@ class Normal(models.Model):
             
         # We now have a rejected image to deal with, do we go up or down?
         if image_info.timestamp < normalized_time:
-            new_normalized_time = normalized_time - timedelta(SECONDS_BASE)
+            new_normalized_time = normalized_time - timedelta(cls.SECONDS_BASE)
         elif image_info.timestamp > normalized_time:
-            new_normalized_time = normalized_time + timedelta(SECONDS_BASE)
+            new_normalized_time = normalized_time + timedelta(cls.SECONDS_BASE)
         else:
             # If we reject and it's equal, give up, we can't do better
             return None
