@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from PIL import Image, ImageStat
 import pyxif
 import os.path
@@ -9,7 +9,7 @@ from util import rgb_to_int, normalize_time, get_fstop_exposure
 from copy import copy
 
 # Create your models here.
-class Picture(models.Model):
+class Info(models.Model):
     # File info
     filepath = models.CharField(max_length=1024, unique=True)
     filename = models.CharField(max_length=255, unique=True, null=True)
@@ -38,7 +38,7 @@ class Picture(models.Model):
         ordering = ['timestamp']
 
     @classmethod
-    def insert(cls, filepath, check_for_existing):
+    def insert(cls, filepath, check_for_existing=True):
         if check_for_existing:
             (pic, created) = cls.objects.get_or_create(filepath=filepath)
         else:
@@ -90,55 +90,88 @@ class Picture(models.Model):
             pic.valid = False
 
         pic.save()
+        return pic
 
 
 class Normal(models.Model):
     timestamp = models.DateTimeField(db_index=True)
-    picture = models.ForeignKey(Picture, null=True)
+    info = models.ForeignKey(Info, null=True)
+    
+    SECONDS_BASE = 10
     
     class Meta:
         ordering = ['timestamp']
 
 
     @classmethod
-    def insert_normals(cls):
-        bounds = Picture.objects.all().aggregate(models.Min('timestamp'), models.Max('timestamp'))
-        start = bounds['timestamp__min']
-        end = bounds['timestamp__max']
+    @transaction.atomic
+    def insert_normals(cls, start_time=None, end_time=None):
+        if start_time is None:
+            bounds = Info.objects.all().aggregate(models.Min('timestamp'))
+            start_time = bounds['timestamp__min']
+            
+        if end_time is None:
+            end_time = datetime.now()
 
-        normalized_start = normalize_time(start, 10)
-        normalized_end = normalize_time(end, 10)
+        normalized_start = normalize_time(start_time, SECONDS_BASE)
+        normalized_end = normalize_time(end_time, SECONDS_BASE)
         
         current_time = copy(normalized_start)
         
         while current_time <= normalized_end:
             time_entry, created = cls.objects.get_or_create(timestamp=current_time)
-            current_time = current_time + timedelta(seconds=10)
-        
+            current_time = current_time + timedelta(seconds=SECONDS_BASE)
+    
+    
+    @classmethod
+    @transaction.atomic
+    def update_normals(cls):
+        bounds = Info.objects.all().aggregate(models.Max('timestamp'))
+        start_time = bounds['timestamp__max']
+        return cls.insert_normals(cls, start_time)
+    
 
     @classmethod
-    def match_pictures(cls):
-        pictures = Picture.objects.all()
-        
-        for picture in pictures:
-            normalized_time = normalize_time(picture.timestamp, 10)
-            time_entry, created = cls.objects.get_or_create(timestamp=normalized_time)
-            if time_entry.picture is not None:
-                # Is the previous normalized time entry there, if so, move current to that one and place this one here
-                previous_time_entry, created = cls.objects.get_or_create(timestamp=normalized_time - timedelta(seconds=10))
-                if previous_time_entry.picture is None:
-                    previous_time_entry.picture = time_entry.picture
-                    time_entry.picture = picture
-                    previous_time_entry.save()
-                    time_entry.save()
-                else:
-                    print("Existing picture at {0} ({4})[{2}] and at {1} ({5})[{3}]".format(
-                        time_entry.timestamp, previous_time_entry.timestamp, time_entry.picture_id, previous_time_entry.id,
-                    time_entry.picture.timestamp, previous_time_entry.picture.timestamp))
-                    print("    Won't enter {0} ({1})".format(picture.timestamp, picture.id))
-            else:
-                time_entry.picture = picture
-                time_entry.save()
-                if created:
-                    print("Had to create normal entry for {0}".format(normalized_time))
+    @transaction.atomic
+    def match_image(cls, image_info, normal_entry=None, rejected_normal=None):
+        # Get the normalized time for the image
+        normalized_time = normalize_time(image_info.timestamp, SECONDS_BASE)
+
+        # Get a normal entry if not provided one
+        if normal_entry is None:
+            normal_entry, created = cls.objects.get_or_create(timestamp=normalized_time)
             
+        # If the normal doesn't already have an associated image, we are done
+        if normal_entry.info is None:
+            normal_entry.info = image_info
+            normal_entry.save()
+            return normal_entry
+        
+        # We have to decide which is better
+        new_diff = abs(normal_entry.timestamp - image_info.timestamp)
+        old_diff = abs(normal_entry.timestamp - normal_entry.info.timestamp)
+        rejected_image = image_info
+        
+        # Replace the existing image if the new one is closer
+        if new_diff < old_diff:
+            rejected_image = normal_entry.info
+            normal_entry.info = image_info
+            normal_entry.save()
+            
+        # We now have a rejected image to deal with, do we go up or down?
+        if image_info.timestamp < normalized_time:
+            new_normalized_time = normalized_time - timedelta(SECONDS_BASE)
+        elif image_info.timestamp > normalized_time:
+            new_normalized_time = normalized_time + timedelta(SECONDS_BASE)
+        else:
+            # If we reject and it's equal, give up, we can't do better
+            return None
+        
+        # Try with new normal
+        new_normal_entry, created = cls.objects.get_or_create(timestamp=new_normalized_time)
+        
+        # But only if the new normal isn't the one we just rejected
+        if new_normal_entry == normal_entry:
+            return None
+        
+        return cls.match_image(image_info, normal_entry=new_normal_entry, rejected_normal=normal_entry)
