@@ -7,6 +7,7 @@ from pytz import utc
 from django.utils import timezone
 from util import rgb_to_int, normalize_time, get_fstop_exposure
 from copy import copy
+from sky import est
 
 # Create your models here.
 class Info(models.Model):
@@ -108,16 +109,18 @@ class Normal(models.Model):
     def insert_normals(cls, start_time=None, end_time=None):
         if start_time is None:
             bounds = Info.objects.all().aggregate(models.Min('timestamp'))
+            if len(bounds) == 0:
+                return
             start_time = bounds['timestamp__min']
             
         if end_time is None:
-            end_time = datetime.now()
+            end_time = datetime.utcnow().replace(tzinfo=utc)
 
         normalized_start = normalize_time(start_time, cls.SECONDS_BASE)
         normalized_end = normalize_time(end_time, cls.SECONDS_BASE)
         
         current_time = copy(normalized_start)
-        
+        print current_time, normalized_end 
         while current_time <= normalized_end:
             time_entry, created = cls.objects.get_or_create(timestamp=current_time)
             current_time = current_time + timedelta(seconds=cls.SECONDS_BASE)
@@ -127,8 +130,10 @@ class Normal(models.Model):
     @transaction.atomic
     def update_normals(cls):
         bounds = Info.objects.all().aggregate(models.Max('timestamp'))
+        if len(bounds) == 0:
+            return
         start_time = bounds['timestamp__max']
-        return cls.insert_normals(cls, start_time)
+        return cls.insert_normals(start_time)
     
 
     @classmethod
