@@ -151,7 +151,10 @@ class Normal(models.Model):
             normal_entry.info = image_info
             normal_entry.save()
             return normal_entry
-        
+        # Or if the normal already has the one we are looking to match
+        elif normal_entry.info == normal_entry:
+            return normal_entry
+
         # We have to decide which is better
         new_diff = abs(normal_entry.timestamp - image_info.timestamp)
         old_diff = abs(normal_entry.timestamp - normal_entry.info.timestamp)
@@ -165,9 +168,9 @@ class Normal(models.Model):
             
         # We now have a rejected image to deal with, do we go up or down?
         if image_info.timestamp < normalized_time:
-            new_normalized_time = normalized_time - timedelta(cls.SECONDS_BASE)
+            new_normalized_time = normalized_time - timedelta(seconds=cls.SECONDS_BASE)
         elif image_info.timestamp > normalized_time:
-            new_normalized_time = normalized_time + timedelta(cls.SECONDS_BASE)
+            new_normalized_time = normalized_time + timedelta(seconds=cls.SECONDS_BASE)
         else:
             # If we reject and it's equal, give up, we can't do better
             return None
