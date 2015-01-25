@@ -34,6 +34,7 @@ def get_fstop_exposure(exif_dict):
 
 def make_movie(imagelistfile, framerate, moviefilepath, name):
     subprocess.check_call(['mencoder',
+                           '-really-quiet',
                            'mf://@{0}'.format(imagelistfile),
                            '-mf', 'fps={0}:type=jpg'.format(framerate),
                            '-ovc', 'x264',

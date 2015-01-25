@@ -1,9 +1,12 @@
 from celery import task
 from .models import Info
+from image.models import Normal
 from sky import est, get_observer, sunset, sunrise
 from util import make_movie
 from timelapse.settings import TIMELAPSE_DIR
 import os.path
+import os
+from datetime import datetime, timedelta
 
 VIDEO_DIR = os.path.join(TIMELAPSE_DIR, 'videos')
 
@@ -61,7 +64,8 @@ def make_standard_movie(start_time, end_time, subdir):
     movie_name = daystr
     
     # Make directory if it doesn't exist
-    os.makedirs(imagelistdir, exist_ok=True)
+    if not os.path.exists(imagelistdir):
+        os.makedirs(imagelistdir)
 
     # Get normal times/images
     normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lt=end_time)
@@ -71,11 +75,11 @@ def make_standard_movie(start_time, end_time, subdir):
     with open(imagelistfilename, 'w') as imagelistfile:
         current_image = None
         for normal in normals:
-            if normal.picture is not None:
+            if normal.info is not None:
                 current_image = normal.info.filepath
-                imagelistfile.write(current_image)
+                imagelistfile.write(current_image + os.linesep)
             elif current_image is not None:
-                imagelistfile.write(current_image)
+                imagelistfile.write(current_image + os.linesep)
             
     # Make the movie
     make_movie(imagelistfilename, 24, moviepath, movie_name)

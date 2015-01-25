@@ -129,7 +129,7 @@ class Normal(models.Model):
     @classmethod
     @transaction.atomic
     def update_normals(cls):
-        bounds = Info.objects.all().aggregate(models.Max('timestamp'))
+        bounds = cls.objects.all().aggregate(models.Max('timestamp'))
         if len(bounds) == 0:
             return
         start_time = bounds['timestamp__max']

@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'djcelery',
     'image',
+    'video',
 )
 
 MIDDLEWARE_CLASSES = (

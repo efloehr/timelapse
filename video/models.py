@@ -20,8 +20,7 @@ class Info(models.Model):
     size = models.IntegerField(default=0)
     
     # Raw images used
-    images = models.ManyToManyField(Normal)
+    images = models.ManyToManyField(Normal, related_name='video_normal')
     
     class Meta:
         ordering = ['day']
-        abstract = True
