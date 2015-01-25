@@ -3,9 +3,13 @@ from image.models import Normal
 
 # Create your models here.
 class Info(models.Model):
+    DAYLIGHT = 1
+    NIGHT    = 2
+    ALL_DAY  = 3
     KINDS = (
-        (1, "Standard Daylight Video"),
-        (2, "Standard Night Video"),
+        (DAYLIGHT, "Standard Daylight Video"),
+        (NIGHT,    "Standard Night Video"),
+        (ALL_DAY,  "All Day 24h Movie"),
     )
     
     # Metadata
@@ -17,10 +21,7 @@ class Info(models.Model):
     # File Info
     filepath = models.CharField(max_length=1024, unique=True)
     filename = models.CharField(max_length=255, unique=True, null=True)
-    size = models.IntegerField(default=0)
-    
-    # Raw images used
-    images = models.ManyToManyField(Normal, related_name='video_normal')
+    size = models.BigIntegerField(default=-1)
     
     class Meta:
         ordering = ['day']

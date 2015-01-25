@@ -1,3 +1,4 @@
+from django.db import transaction
 from celery import task
 from .models import Info
 from image.models import Normal
@@ -17,7 +18,7 @@ def make_all_day_movie(day):
     end_time = start_time + timedelta(days=1)
     
     subdir = 'all_day'
-    make_standard_movie(start_time, end_time, subdir)
+    make_standard_movie(start_time, start_time, end_time, subdir, Info.ALL_DAY)
 
 
 # ... daylight
@@ -35,7 +36,7 @@ def make_daylight_movie(day):
     end_time = sunset_time + timedelta(minutes=60)
     
     subdir = 'daylight'
-    make_standard_movie(start_time, end_time, subdir)
+    make_standard_movie(day_start, start_time, end_time, subdir, Info.DAYLIGHT)
 
 # ... overnight
 @task()
@@ -54,14 +55,29 @@ def make_overnight_movie(day):
     end_time = sunrise_time
     
     subdir = 'overnight'
-    make_standard_movie(start_time, end_time, subdir)
+    make_standard_movie(day_start, start_time, end_time, subdir, Info.NIGHT)
 
 
-def make_standard_movie(start_time, end_time, subdir):
+@transaction.atomic
+def get_movie_record(day_start, start_time, end_time, kind, filepath, filename):
+    record, created = Info.objects.get_or_create(filepath = filepath)
+    
+    record.day = day_start.date()
+    record.start = start_time
+    record.end = end_time
+    record.kind = kind
+    record.filepath = filepath
+    record.filename = filename
+    
+    record.save()
+    return record
+
+
+def make_standard_movie(day_start, start_time, end_time, subdir, kind):
     daystr = start_time.strftime('%Y-%m-%d')
     moviepath = os.path.join(VIDEO_DIR, subdir)
     imagelistdir = os.path.join(moviepath, 'lists')
-    movie_name = daystr
+    movie_name = daystr + '.avi'
     
     # Make directory if it doesn't exist
     if not os.path.exists(imagelistdir):
@@ -70,6 +86,9 @@ def make_standard_movie(start_time, end_time, subdir):
     # Get normal times/images
     normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lt=end_time)
 
+    # Make the movie record
+    movie_record = get_movie_record(day_start, start_time, end_time, kind, moviepath, movie_name)
+    
     # Make image file
     imagelistfilename = os.path.join(imagelistdir, '{0}.txt'.format(daystr))
     with open(imagelistfilename, 'w') as imagelistfile:
@@ -84,3 +103,10 @@ def make_standard_movie(start_time, end_time, subdir):
     # Make the movie
     make_movie(imagelistfilename, 24, moviepath, movie_name)
 
+    if os.path.exists(moviepath):
+        movie_record.size = os.stat(moviepath).st_size
+    else:
+        movie_record.size = -1
+    
+    pic.size = filestat.st_size
+    

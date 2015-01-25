@@ -43,5 +43,5 @@ def make_movie(imagelistfile, framerate, moviefilepath, name):
                            '-oac',
                            'copy',
                            '-o',
-                           os.path.join(moviefilepath, name + '.avi')
+                           os.path.join(moviefilepath, name)
                            ])
