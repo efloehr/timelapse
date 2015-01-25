@@ -14,21 +14,6 @@ from glob import iglob
 
 
 @task()
-def insert(filepath, check_for_existing):
-    Picture.insert(filepath, check_for_existing)
-    
-
-@task()
-def fix_fstop_exposure(picture_id):
-    pic = Picture.objects.get(pk=picture_id)
-    dummy, exif_dict, dummy = pyxif.load(pic.filepath)
-    
-    pic.fstop, pic.exposure = get_fstop_exposure(exif_dict)
-    
-    pic.save()
-    
-    
-@task()
 def make_mosaic_frame(directory, sequence_no, start_time, columns, frame_width, hd_ratio=False, start_row=0):
     normalized_start = normalize_time(start_time)
     times = Normal.objects.filter(timestamp__gte=normalized_start,
@@ -170,52 +155,6 @@ def make_black_1080p_image(timestamp, savedir, sequence_no):
     frameimg = Image.new("RGB", (1440,1080))
     frameimg.save(os.path.join(savedir, "{0:08d}.jpg".format(sequence_no)))
 
-@task()
-def make_all_day_movie(day):
-    # Normalize to midnight
-    start_time = datetime(day.year, day.month, day.day, tzinfo=est)
-    end_time = start_time + timedelta(days=1)
-    
-    subdir = 'all_day'
-    make_standard_movie(start_time, end_time, subdir)
-
-
-# ... daylight
-@task()
-def make_daylight_movie(day):
-    # Normalize to midnight
-    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
-    
-    # Find that day's sunrise and sunset
-    obs = get_observer()
-    sunrise_time = sunrise(obs, day_start)
-    sunset_time = sunset(obs, day_start)
-    
-    start_time = sunrise_time - timedelta(minutes=60)
-    end_time = sunset_time + timedelta(minutes=60)
-    
-    subdir = 'daylight'
-    make_standard_movie(start_time, end_time, subdir)
-
-# ... overnight
-@task()
-def make_overnight_movie(day):
-    # Normalize to midnight
-    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
-    
-    # Find that day's sunset
-    obs = get_observer()
-    sunset_time = sunset(obs, day_start)
-
-    # And next day's sunrise
-    sunrise_time = sunrise(obs, sunset_time)
-    
-    start_time = sunset_time
-    end_time = sunrise_time
-    
-    subdir = 'overnight'
-    make_standard_movie(start_time, end_time, subdir)
-
 # /var/tlwork/allnight
 @task()
 def make_all_night_image(day):
@@ -279,30 +218,6 @@ def make_all_night_image(day):
     img.save(os.path.join(dirpath, filename))
     img_light.save(os.path.join(dirpath, filename_light))
     ImageOps.invert(img_light).save(os.path.join(dirpath, filename_light_neg))
-
-def make_standard_movie(start_time, end_time, subdir):
-    day_dir = start_time.strftime('%Y-%m-%d')
-    dirpath = os.path.join(base_daily_dir, day_dir, subdir)
-    movie_name = day_dir
-
-    moviedir = os.path.join(base_daily_dir, 'movies', subdir)
- 
-    # Make directory if it doesn't exist
-    os.makedirs(dirpath, exist_ok=True)
-    os.makedirs(moviedir, exist_ok=True)
-
-    # Get normal times/images
-    normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lt=end_time)
-    
-    # go through and make image frames (1080p)
-    for sequence_no, normal in enumerate(normals):
-        if normal.picture is not None:
-            make_1080p_image(normal.picture.filepath, dirpath, sequence_no+1)
-        else:
-            make_black_1080p_image(normal.timestamp, dirpath, sequence_no+1)
-
-    # Make the movie
-    make_movie(dirpath, moviedir, movie_name, 24)
 
 
 @task()
