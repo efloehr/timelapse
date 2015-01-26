@@ -60,8 +60,11 @@ def make_overnight_movie(day):
 
 @transaction.atomic
 def get_movie_record(day_start, start_time, end_time, kind, filepath, filename):
-    record, created = Info.objects.get_or_create(filepath = filepath)
-    
+    try:
+        record = Info.objects.get(filepath = filepath)
+    except Info.DoesNotExist:
+        record = Info(filepath = filepath)
+
     record.day = day_start.date()
     record.start = start_time
     record.end = end_time
@@ -74,10 +77,10 @@ def get_movie_record(day_start, start_time, end_time, kind, filepath, filename):
 
 
 def make_standard_movie(day_start, start_time, end_time, subdir, kind):
-    daystr = start_time.strftime('%Y-%m-%d')
-    moviepath = os.path.join(VIDEO_DIR, subdir)
-    imagelistdir = os.path.join(moviepath, 'lists')
+    daystr = day_start.strftime('%Y-%m-%d')
+    imagelistdir = os.path.join(VIDEO_DIR, subdir, 'lists')
     movie_name = daystr + '.avi'
+    moviepath = os.path.join(VIDEO_DIR, subdir, movie_name)
     
     # Make directory if it doesn't exist
     if not os.path.exists(imagelistdir):
@@ -101,12 +104,12 @@ def make_standard_movie(day_start, start_time, end_time, subdir, kind):
                 imagelistfile.write(current_image + os.linesep)
             
     # Make the movie
-    make_movie(imagelistfilename, 24, moviepath, movie_name)
+    make_movie(imagelistfilename, 24, moviepath)
 
     if os.path.exists(moviepath):
         movie_record.size = os.stat(moviepath).st_size
     else:
         movie_record.size = -1
     
-    pic.size = filestat.st_size
-    
+    movie_record.save()
+ 

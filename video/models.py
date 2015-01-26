@@ -20,7 +20,7 @@ class Info(models.Model):
     
     # File Info
     filepath = models.CharField(max_length=1024, unique=True)
-    filename = models.CharField(max_length=255, unique=True, null=True)
+    filename = models.CharField(max_length=255)
     size = models.BigIntegerField(default=-1)
     
     class Meta:
