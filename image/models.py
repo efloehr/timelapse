@@ -183,3 +183,24 @@ class Normal(models.Model):
             return None
         
         return cls.match_image(image_info, normal_entry=new_normal_entry, rejected_normal=normal_entry)
+
+
+class Product(models.Model):
+    ALLNIGHT = 1
+    KINDS = (
+        (ALLNIGHT, "All-night overlay image"),
+    )
+
+    # Metadata
+    day = models.DateField(db_index=True, null=True)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    kind = models.SmallIntegerField(choices=KINDS)
+
+    # File Info
+    filepath = models.CharField(max_length=1024, unique=True)
+    filename = models.CharField(max_length=255, unique=True, null=True)
+    size = models.BigIntegerField(default=-1)
+
+    class Meta:
+        ordering = ['day']

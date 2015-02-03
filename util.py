@@ -32,7 +32,7 @@ def get_fstop_exposure(exif_dict):
     return fstop, exposure
     
 
-def make_movie(imagelistfile, framerate, moviefilepath, name):
+def make_video(imagelistfile, framerate, moviefilepath, name):
     subprocess.check_call(['mencoder',
                            '-really-quiet',
                            'mf://@{0}'.format(imagelistfile),

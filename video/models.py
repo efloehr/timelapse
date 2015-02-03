@@ -1,8 +1,7 @@
 from django.db import models
-from image.models import Normal
 
-# Create your models here.
-class Info(models.Model):
+
+class Product(models.Model):
     DAYLIGHT = 1
     NIGHT    = 2
     ALL_DAY  = 3
@@ -13,7 +12,7 @@ class Info(models.Model):
     )
     
     # Metadata
-    day = models.DateField(db_index=True)
+    day = models.DateField(db_index=True, null=True)
     start = models.DateTimeField()
     end = models.DateTimeField()
     kind = models.SmallIntegerField(choices=KINDS)

@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from datetime import date, timedelta
 from copy import copy
-from video.tasks import make_daylight_movie, make_overnight_movie
+from video.tasks import make_daylight_video, make_overnight_video
 
 class Command(BaseCommand):
     args = '<start date> <end date>'
@@ -24,8 +24,8 @@ class Command(BaseCommand):
         
         while current_day <= end_day:
             print('Making task for {0}'.format(current_day))
-            make_daylight_movie.delay(current_day)
-            make_overnight_movie.delay(current_day)
+            make_daylight_video.delay(current_day)
+            make_overnight_video.delay(current_day)
             current_day += timedelta(days=1)
         
         
