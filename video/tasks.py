@@ -3,7 +3,7 @@ from celery import task
 from .models import Product
 from image.models import Normal
 from sky import est, get_observer, sunset, sunrise
-from util import make_video
+from util import make_video, record_size
 from timelapse.settings import TIMELAPSE_DIR
 import os.path
 import os
@@ -60,8 +60,11 @@ def make_overnight_video(day):
 
 @transaction.atomic
 def get_video_product(day_start, start_time, end_time, kind, filepath, filename):
-    record, created = Product.objects.get_or_create(filepath = filepath)
-    
+    try:
+        record = Info.objects.get(filepath = filepath)
+    except Info.DoesNotExist:
+        record = Info(filepath = filepath)
+
     record.day = day_start.date()
     record.start = start_time
     record.end = end_time
@@ -75,9 +78,9 @@ def get_video_product(day_start, start_time, end_time, kind, filepath, filename)
 
 def make_standard_video(day_start, start_time, end_time, subdir, kind):
     daystr = day_start.strftime('%Y-%m-%d')
-    videopath = os.path.join(VIDEO_DIR, subdir)
-    imagelistdir = os.path.join(videopath, 'lists')
+    imagelistdir = os.path.join(VIDEO_DIR, subdir, 'lists')
     video_name = daystr + '.avi'
+    videopath = os.path.join(VIDEO_DIR, subdir, video_name)
     
     # Make directory if it doesn't exist
     if not os.path.exists(imagelistdir):
@@ -101,12 +104,8 @@ def make_standard_video(day_start, start_time, end_time, subdir, kind):
                 imagelistfile.write(current_image + os.linesep)
             
     # Make the video
-    make_video(imagelistfilename, 24, videopath, video_name)
+    make_video(imagelistfilename, 24, videopath)
 
-    if os.path.exists(videopath):
-        video_record.size = os.stat(videopath).st_size
-    else:
-        video_record.size = -1
-    
-    pic.size = filestat.st_size
-    
+    # Record and save file size
+    record_size(videopath, video_record)
+
