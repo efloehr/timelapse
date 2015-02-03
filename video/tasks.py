@@ -61,9 +61,9 @@ def make_overnight_video(day):
 @transaction.atomic
 def get_video_product(day_start, start_time, end_time, kind, filepath, filename):
     try:
-        record = Info.objects.get(filepath = filepath)
-    except Info.DoesNotExist:
-        record = Info(filepath = filepath)
+        record = Product.objects.get(filepath = filepath)
+    except Product.DoesNotExist:
+        record = Product(filepath = filepath)
 
     record.day = day_start.date()
     record.start = start_time

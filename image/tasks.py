@@ -1,10 +1,11 @@
+from django.db import transaction
 from celery import task
 from .models import Info, Normal, Product
-from settings import TIMELAPSE_DIR
-from datetime import datetime
-from sky import sunset, sunrise, est
-from util import normalize_time
-from PIL import Image, ImageOps, ImageChops
+from timelapse.settings import TIMELAPSE_DIR
+from datetime import datetime, timedelta
+from sky import sunset, sunrise, est, get_observer
+from util import normalize_time, record_size
+from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 
 APP_DIR = 'images'
@@ -17,7 +18,10 @@ def insert(filepath, check_for_existing=True):
 
 @transaction.atomic
 def get_image_product(day_start, start_time, end_time, kind, filepath, filename):
-    record, created = Product.objects.get_or_create(filepath = filepath)
+    try:
+        record = Product.objects.get(filepath = filepath)
+    except Product.DoesNotExist:
+        record = Product(filepath = filepath)
 
     record.day = day_start.date()
     record.start = start_time
@@ -49,13 +53,13 @@ def make_all_night_image(day):
     start_time = normalize_time(sunset_time + timedelta(hours=1))
     end_time = normalize_time(sunrise_time - timedelta(hours=1))
 
-    times = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, picture__id__isnull=False)
+    normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, info__isnull=False)
 
     img = Image.new("L", (2048,1536), background_color)
     img_light = None
 
-    for time in times:
-        source = Image.open(time.picture.filepath)
+    for normal in normals:
+        source = Image.open(normal.info.filepath)
 
         # Make light image
         if img_light is None:
@@ -76,15 +80,16 @@ def make_all_night_image(day):
     imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'allnight')
     
     # Make directory if it doesn't exist
-    os.makedirs(imagepath, exist_ok=True)
+    if not os.path.exists(imagepath):
+        os.makedirs(imagepath)
 
     img_filepath = os.path.join(imagepath, filename)
     img_light.save(img_filepath)
-    image_record = get_video_product(day_start, start_time, end_time, Product.ALLNIGHT, imagepath, filename)
+    image_record = get_image_product(day_start, start_time, end_time, Product.ALLNIGHT, imagepath, filename)
     record_size(img_filepath, image_record)
 
     img_neg_filepath = os.path.join(imagepath, filename_neg)
     ImageOps.invert(img_light).save(img_neg_filepath)
-    image_record_neg = get_video_product(day_start, start_time, end_time, Product.ALLNIGHT_NEG, imagepath, filename_neg)
+    image_record_neg = get_image_product(day_start, start_time, end_time, Product.ALLNIGHT_NEG, imagepath, filename_neg)
     record_size(img_neg_filepath, image_record_neg)
 
