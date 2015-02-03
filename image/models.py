@@ -186,9 +186,11 @@ class Normal(models.Model):
 
 
 class Product(models.Model):
-    ALLNIGHT = 1
+    ALLNIGHT     = 1
+    ALLNIGHT_NEG = 2
     KINDS = (
-        (ALLNIGHT, "All-night overlay image"),
+        (ALLNIGHT,     "All-night overlay image"),
+        (ALLNIGHT_NEG, "All-night overlay image negative"),
     )
 
     # Metadata

@@ -2,6 +2,8 @@ from datetime import timedelta
 import math
 import subprocess
 import os.path
+import os
+
 
 def rgb_to_int(rgb_tuple):
     return int(round(rgb_tuple[0]*256*256 + rgb_tuple[1]*256 + rgb_tuple[2]))
@@ -47,3 +49,13 @@ def make_video(imagelistfile, framerate, moviefilepath):
                            '-o',
                            moviefilepath
                            ])
+
+
+def record_size(filepath, product_record):
+    if os.path.exists(filepath):
+        product_record.size = os.stat(filepath).st_size
+    else:
+        product_record.size = -1
+
+    product_record.save()
+
