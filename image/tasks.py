@@ -113,6 +113,11 @@ def make_daystrip(day):
         img.paste(picture.crop((0,400,2048,401)),(0,row))
 
     imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daystrip')
+
+    # Make directory if it doesn't exist
+    if not os.path.exists(imagepath):
+        os.makedirs(imagepath)
+
     filename = '{0}.png'.format(dayname)
     img_filepath = os.path.join(imagepath, filename)
     img.save(img_filepath)
@@ -146,6 +151,11 @@ def make_daystrip_picture(day):
         img.paste(picture.crop((column,0,column+1,1536)),(column,0))
 
     imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daypic')
+
+    # Make directory if it doesn't exist
+    if not os.path.exists(imagepath):
+        os.makedirs(imagepath)
+
     filename = '{0}.png'.format(dayname)
     img_filepath = os.path.join(imagepath, filename)
     img.save(img_filepath)
