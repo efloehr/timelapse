@@ -160,5 +160,5 @@ def make_daystrip_picture(day):
     filename = '{0}.png'.format(dayname)
     img_filepath = os.path.join(imagepath, filename)
     img.save(img_filepath)
-    image_record = get_image_product(day_start, day_start, day_end, Product.DAYSTRIP, imagepath, filename)
+    image_record = get_image_product(day_start, day_start, day_end, Product.DAYSTRIP_PIC, imagepath, filename)
     record_size(img_filepath, image_record)
