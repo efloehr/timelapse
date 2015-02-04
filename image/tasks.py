@@ -7,6 +7,7 @@ from sky import sunset, sunrise, est, get_observer
 from util import normalize_time, record_size
 from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
+import math
 
 APP_DIR = 'images'
 
