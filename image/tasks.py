@@ -93,3 +93,55 @@ def make_all_night_image(day):
     image_record_neg = get_image_product(day_start, start_time, end_time, Product.ALLNIGHT_NEG, imagepath, filename_neg)
     record_size(img_neg_filepath, image_record_neg)
 
+
+@task()
+def make_daystrip(day):
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+    day_end = day_start + timedelta(days=1)
+    dayname = day.strftime('%Y-%m-%d')
+
+    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
+
+    img = Image.new("RGB", (2048,8640))
+
+    for row, normal in enumerate(normals):
+        if normal.info is None:
+            continue
+
+        picture = Image.open(normal.info.filepath)
+        img.paste(picture.crop((0,400,2048,401)),(0,row))
+
+    imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daystrip')
+    img.save(os.path.join(imagepath, '{0}.png'.format(dayname)))
+
+
+@task()
+def make_daystrip_picture(day):
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+    day_end = day_start + timedelta(days=1)
+    dayname = day.strftime('%Y-%m-%d')
+
+    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
+
+    img = Image.new("RGB", (2048,1536))
+
+    current_col = None
+    for normal_no, normal in enumerate(normals):
+        if normal.info is None:
+            continue
+
+        column = int(math.floor(2048 * (normal_no / 8640.0)))
+
+        if column == current_col:
+            continue
+
+        current_col = column
+        picture = Image.open(normal.info.filepath)
+        img.paste(picture.crop((column,0,column+1,1536)),(column,0))
+
+    imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daypic')
+    img.save(os.path.join(imagepath, '{0}.png'.format(dayname)))
+
+

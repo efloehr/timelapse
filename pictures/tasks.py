@@ -157,28 +157,6 @@ def make_black_1080p_image(timestamp, savedir, sequence_no):
 
 
 @task()
-def make_daystrip(dirpath, day):
-    # Normalize to midnight
-    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
-    dayname = day.strftime('%Y-%m-%d')
-
-    day_end = day_start + timedelta(days=1)
-    
-    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
-
-    img = Image.new("RGB", (2048,8640))
-    
-    for row, normal in enumerate(normals):
-        if normal.picture is None:
-            continue
-    
-        picture = Image.open(normal.picture.filepath)
-        img.paste(picture.crop((0,400,2048,401)),(0,row))
-
-    img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
-
-
-@task()
 def make_daystrip_picture(dirpath, day):
     # Normalize to midnight
     day_start = datetime(day.year, day.month, day.day, tzinfo=est)
@@ -203,35 +181,6 @@ def make_daystrip_picture(dirpath, day):
         current_row = row
         picture = Image.open(normal.picture.filepath)
         img.paste(picture.crop((0,row,2048,row+1)),(0,row))
-
-    img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
-
-
-@task()
-def make_daystrip_picture_vert(dirpath, day):
-    # Normalize to midnight
-    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
-    dayname = day.strftime('%Y-%m-%d')
-
-    day_end = day_start + timedelta(days=1)
-    
-    normals = Normal.objects.filter(timestamp__gte=day_start, timestamp__lt=day_end)
-
-    img = Image.new("RGB", (2048,1536))
-
-    current_col = None
-    for normal_no, normal in enumerate(normals):
-        if normal.picture is None:
-            continue
-    
-        column = int(math.floor(2048 * (normal_no / 8640.0)))
-        
-        if column == current_col:
-            continue
-        
-        current_col = column
-        picture = Image.open(normal.picture.filepath)
-        img.paste(picture.crop((column,0,column+1,1536)),(column,0))
 
     img.save(os.path.join(dirpath, '{0}.png'.format(dayname)))
 

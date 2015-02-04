@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, date
 import math
 import subprocess
 import os.path
 import os
+from copy import copy
 
 
 def rgb_to_int(rgb_tuple):
@@ -59,3 +60,34 @@ def record_size(filepath, product_record):
 
     product_record.save()
 
+
+# Takes either string in form "2014-01-01" or date, and return days with day_step in between
+# If start is after end and day_step is not specified, it will change it to -1 automatically, otherwise
+# day_step defaults to 1 day
+def day_generator(start_day=None, end_day=None, day_step=None):
+    if start_day is None:
+        start_day = date.today() - timedelta(day=1)
+    elif type(start_day) == str:
+        year, month, day = [ int(x) for x in start_day.split('-') ]
+        start_day = date(year, month, day)
+
+    if end_day is None:
+        end_day = start_day
+    elif type(end_day) == str:
+        year, month, day = [ int(x) for x in end_day.split('-') ]
+        end_day = date(year, month, day)
+
+    current_day = copy(start_day)
+    
+    if day_step is None:
+        if end_day < start_day:
+            day_step = -1
+        else:
+            day_step = 1
+    
+    range_start = min(start_day, end_day)
+    range_end = max(start_day, end_day)
+    
+    while current_day >= range_start and current_day <= range_end:
+        yield current_day
+        current_day += timedelta(days=day_step)
