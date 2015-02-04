@@ -188,9 +188,13 @@ class Normal(models.Model):
 class Product(models.Model):
     ALLNIGHT     = 1
     ALLNIGHT_NEG = 2
+    DAYSTRIP     = 3
+    DAYSTRIP_PIC = 4
     KINDS = (
         (ALLNIGHT,     "All-night overlay image"),
         (ALLNIGHT_NEG, "All-night overlay image negative"),
+        (DAYSTRIP,     "Classic daystrip"),
+        (DAYSTRIP_PIC, "Daystrip that goes from left to right and is each column in the image"),
     )
 
     # Metadata

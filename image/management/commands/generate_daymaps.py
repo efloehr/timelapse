@@ -68,18 +68,23 @@ class Command(BaseCommand):
             im_max.putpixel(pos, color_max)
 
         # All done, save
-        dirpath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daymaps')
-        im_center.save(os.path.join(dirpath, 'center_raw.png'))
-        im_mean.save(os.path.join(dirpath, 'mean_raw.png'))
-        im_median.save(os.path.join(dirpath, 'median_raw.png'))
-        im_min.save(os.path.join(dirpath, 'min_raw.png'))
-        im_max.save(os.path.join(dirpath, 'max_raw.png'))
+        imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'daymaps')
+
+        # Make directory if it doesn't exist
+        if not os.path.exists(imagepath):
+            os.makedirs(imagepath)
+
+        im_center.save(os.path.join(imagepath, 'center_raw.png'))
+        im_mean.save(os.path.join(imagepath, 'mean_raw.png'))
+        im_median.save(os.path.join(imagepath, 'median_raw.png'))
+        im_min.save(os.path.join(imagepath, 'min_raw.png'))
+        im_max.save(os.path.join(imagepath, 'max_raw.png'))
 
         # Scale
-        im_center.resize((1920,1080), Image.BICUBIC).save(os.path.join(dirpath, 'center_hd.png'))
-        im_mean.resize((1920,1080), Image.BICUBIC).save(os.path.join(dirpath, 'mean_hd.png'))
-        im_median.resize((1920,1080), Image.BICUBIC).save(os.path.join(dirpath, 'median_hd.png'))
-        im_min.resize((1920,1080), Image.BICUBIC).save(os.path.join(dirpath, 'min_hd.png'))
-        im_max.resize((1920,1080), Image.BICUBIC).save(os.path.join(dirpath, 'max_hd.png'))
+        im_center.resize((1920,1080), Image.BICUBIC).save(os.path.join(imagepath, 'center_hd.png'))
+        im_mean.resize((1920,1080), Image.BICUBIC).save(os.path.join(imagepath, 'mean_hd.png'))
+        im_median.resize((1920,1080), Image.BICUBIC).save(os.path.join(imagepath, 'median_hd.png'))
+        im_min.resize((1920,1080), Image.BICUBIC).save(os.path.join(imagepath, 'min_hd.png'))
+        im_max.resize((1920,1080), Image.BICUBIC).save(os.path.join(imagepath, 'max_hd.png'))
 
 
