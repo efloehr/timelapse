@@ -35,11 +35,8 @@ def get_image_product(day_start, start_time, end_time, kind, filepath, filename)
     return record
 
 
-# /var/tlwork/allnight
 @task()
 def make_all_night_image(day):
-    background_color = 255 # White
-
     # Normalize to midnight
     day_start = datetime(day.year, day.month, day.day, tzinfo=est)
 
@@ -56,7 +53,6 @@ def make_all_night_image(day):
 
     normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, info__isnull=False)
 
-    img = Image.new("L", (2048,1536), background_color)
     img_light = None
 
     for normal in normals:
@@ -161,4 +157,68 @@ def make_daystrip_picture(day):
     img_filepath = os.path.join(imagepath, filename)
     img.save(img_filepath)
     image_record = get_image_product(day_start, day_start, day_end, Product.DAYSTRIP_PIC, imagepath, filename)
+    record_size(img_filepath, image_record)
+
+
+@task()
+def make_all_day_image(day):
+    background_color = 255 # White
+
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+
+    # Find that day's sunrise and sunset
+    obs = get_observer()
+    sunrise_time = sunrise(obs, day_start)
+    sunset_time = sunset(obs, day_start)
+
+    start_time = sunrise_time + timedelta(minutes=60)
+    end_time = sunset_time - timedelta(minutes=60)
+
+    normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, info__isnull=False)
+
+    img = Image.new("L", (2048,1536), background_color)
+    img_light = None
+    img_dark = None
+    
+    for normal in normals:
+        source = Image.open(normal.info.filepath)
+
+        # Make light image
+        if img_light is None:
+            img_light = source
+        else:
+            img_light = ImageChops.lighter(img_light, source)
+
+        # Make dark image
+        if img_dark is None:
+            img_dark = source
+        else:
+            img_dark = ImageChops.darker(img_light, source)
+
+    # Put a date on the image
+    daystr = day.strftime('%Y-%m-%d')
+    canvas = ImageDraw.Draw(img_light)
+    canvas.text((20,1500), daystr)
+    canvas = ImageDraw.Draw(img_dark)
+    canvas.text((20,1500), daystr)
+
+    # And save
+    filename_light = daystr + '_light.png'
+    filename_dark = daystr + '_dark.png'
+
+    imagepath = os.path.join(TIMELAPSE_DIR, APP_DIR, 'allday')
+
+    # Make directory if it doesn't exist
+    if not os.path.exists(imagepath):
+        os.makedirs(imagepath)
+
+    img_filepath = os.path.join(imagepath, filename_light)
+    img_light.save(img_filepath)
+    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_LIGHT, imagepath, filename)
+    record_size(img_filepath, image_record)
+
+    img_filepath = os.path.join(imagepath, filename_dark)
+    img_dark.save(img_filepath)
+    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_DARK, imagepath, filename)
     record_size(img_filepath, image_record)

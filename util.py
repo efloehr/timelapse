@@ -35,6 +35,7 @@ def get_fstop_exposure(exif_dict):
     return fstop, exposure
     
 
+#mencoder -really-quiet mf://@imagefile.txt -mf fps=14:type=jpg -ovc x264 -lavcopts vcodec=mpeg4:mbd=2:trell -vf scale=1440:1080 -oac copy -o moviefile.mp4
 def make_video(imagelistfile, framerate, moviefilepath):
     subprocess.check_call(['mencoder',
                            '-really-quiet',

@@ -190,11 +190,15 @@ class Product(models.Model):
     ALLNIGHT_NEG = 2
     DAYSTRIP     = 3
     DAYSTRIP_PIC = 4
+    ALLDAY_LIGHT = 5
+    ALLDAY_DARK  = 6
     KINDS = (
         (ALLNIGHT,     "All-night overlay image"),
         (ALLNIGHT_NEG, "All-night overlay image negative"),
         (DAYSTRIP,     "Classic daystrip"),
         (DAYSTRIP_PIC, "Daystrip that goes from left to right and is each column in the image"),
+        (ALLDAY_LIGHT, "All-day lightest overlay image"),
+        (ALLDAY_DARK, "All-day darkest overlay image negative"),
     )
 
     # Metadata
