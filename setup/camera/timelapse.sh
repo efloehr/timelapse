@@ -1,7 +1,5 @@
 #!/bin/bash
-
-RAMDISK=/pics
-GPHOTO=gphoto2
+source ./globalvars.sh
 
 # Check for existence of pics RAMdisk
 if [ ! -d "$RAMDISK" ]; then
@@ -10,22 +8,12 @@ if [ ! -d "$RAMDISK" ]; then
 fi
 
 # Mount RAMdisk if not already mounted
-mountpoint -q $RAMDISK || sudo mount -t tmpfs -o size=250m tmpfs $RAMDISK
+mountpoint -q $RAMDISK || sudo mount -t tmpfs -o size=384m tmpfs $RAMDISK
 
-# Check for picture files existing in RAMdisk and move to server
-if [ "$(ls -A $RAMDISK | sort | head -n -1)" ]; then
-  for image in `ls $RAMDISK/*.jpg | sort | head -n -1`; do
-    imagefile=`basename $image`
-    daydir=`echo $imagefile | cut -d"-" -f-3`
-    hourdir=`echo $imagefile | cut -d"-" -f4`
-    datedir=$daydir/$hourdir
-    ssh -c arcfour timelapse@eve "mkdir -p $datedir" && scp -c arcfour -q $image timelapse@eve:$datedir && rm $image
-  done
-  # Link to most current image
-  ssh -c arcfour timelapse@eve "ln -sf $datedir/$imagefile current.jpg"
-else
-    echo "No image files found!"
-fi
+# Check for older picture files existing in RAMdisk and move to server
+for image in `find $RAMDISK -name "*.jpg" -mmin +5 | sort`; do
+  ./copyimage.sh $image
+done
 
 # Only run gphoto timelapse if not already
 if [ -z "$(pgrep $GPHOTO)" ]; then
