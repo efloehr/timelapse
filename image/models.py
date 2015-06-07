@@ -187,10 +187,14 @@ class Normal(models.Model):
     @classmethod
     def match_images(cls, start_normal=None, end_normal=None, dryrun=False):
         bounds = Info.objects.all().aggregate(models.Min('timestamp'), models.Max('timestamp'))
+        last_info_timestamp = Normal.objects.all().aggregate(models.Max('info__timestamp'))
         if start_normal is None:
-            if len(bounds) == 0:
-                return
-            start_time = bounds['timestamp__min']
+            try:
+                start_time = last_info_timestamp['info__timestamp__max']
+            except KeyError:
+                if len(bounds) == 0:
+                    return
+                start_time = bounds['timestamp__min']
         else:
             start_time = start_normal.timestamp
             
@@ -199,6 +203,8 @@ class Normal(models.Model):
         else:
             end_time = end_normal.timestamp
             
+        print("Matching from {0} to {1}".format(start_time, end_time))
+        
         normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
         images = Info.objects.filter(timestamp__gte=start_time - timedelta(seconds=cls.SECONDS_BASE),
                                      timestamp__lte=end_time + timedelta(seconds=cls.SECONDS_BASE))
