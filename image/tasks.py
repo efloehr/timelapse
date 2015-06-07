@@ -14,7 +14,7 @@ APP_DIR = 'images'
 @task()
 def insert(filepath, check_for_existing=True):
     info = Info.insert(filepath, check_for_existing)
-    Normal.match_image(info)
+    #Normal.match_image(info)
 
 
 @transaction.atomic

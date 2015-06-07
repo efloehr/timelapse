@@ -184,7 +184,109 @@ class Normal(models.Model):
         
         return cls.match_image(image_info, normal_entry=new_normal_entry, rejected_normal=normal_entry)
 
+    @classmethod
+    def match_images(cls, start_normal=None, end_normal=None, dryrun=False):
+        bounds = Info.objects.all().aggregate(models.Min('timestamp'), models.Max('timestamp'))
+        if start_normal is None:
+            if len(bounds) == 0:
+                return
+            start_time = bounds['timestamp__min']
+        else:
+            start_time = start_normal.timestamp
+            
+        if end_normal is None:
+            end_time = bounds['timestamp__max']
+        else:
+            end_time = end_normal.timestamp
+            
+        normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
+        images = Info.objects.filter(timestamp__gte=start_time - timedelta(seconds=cls.SECONDS_BASE),
+                                     timestamp__lte=end_time + timedelta(seconds=cls.SECONDS_BASE))
 
+        if len(images) == 0:
+            print("No images for range {0} to {1}".format(start_time, end_time))
+            return
+        
+        if len(normals) == 0:
+            cls.insert_normals(start_time, end_time)
+            normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
+            
+        image_index = 0
+        current_image = images[image_index]
+        previous_image = None
+        normal = normals[0]
+        
+        # First normal want to get as close as possible
+        normalized_image_timestamp = normalize_time(current_image.timestamp, cls.SECONDS_BASE)
+        while normalized_image_timestamp != normal.timestamp:
+            try:
+                image_index += 1
+                current_image = images[image_index]
+                normalized_image_timestamp = normalize_time(current_image.timestamp, cls.SECONDS_BASE)
+            except IndexError:
+                return
+        
+        if normal.info is not None:
+            previous_normal_info_timestamp = normal.info.timestamp
+        else:
+            previous_normal_info_timestamp = None
+        
+        if previous_image is None or \
+           abs(normal.timestamp - current_image.timestamp) <= abs(normal.timestamp - previous_image.timestamp):
+            normal.info = current_image
+            image_index += 1
+            current_image = images[image_index]
+        else:
+            normal.info = previous_image
+            
+        print("{0} from {1} to {2}".format(normal.timestamp, previous_normal_info_timestamp, normal.info.timestamp))
+        if not dryrun:
+            normal.save()
+        
+        # Now just keep going and don't skip until we have a delta greater than SECONDS_BASE
+        normal_iterator = iter(normals[1:])
+        for normal in normal_iterator:
+            diff_seconds = (current_image.timestamp - normal.timestamp).total_seconds()
+            if abs(diff_seconds) <= cls.SECONDS_BASE:
+                # That's exactly what we want
+                pass
+            else:
+                if current_image.timestamp < normal.timestamp:
+                    # Walk up the image to the normal
+                    while normalize_time(current_image.timestamp, cls.SECONDS_BASE) < normal.timestamp:
+                        image_index += 1
+                        print("Incrementing current image from {0} to next".format(normal.timestamp))
+                        current_image = images[image_index]
+                    # Now we may need to walk the normal to the image
+
+                # Walk up the normal to the image
+                normalized_image_timestamp = normalize_time(current_image.timestamp, cls.SECONDS_BASE)
+                while normalized_image_timestamp != normal.timestamp:
+                    print("Walking normal from {0} to {1}".format(normal.timestamp, normalized_image_timestamp))
+                    if normal.info is not None:
+                        previous_normal_info_timestamp = normal.info.timestamp
+                    else:
+                        previous_normal_info_timestamp = None
+                    normal.info = None
+                    if not dryrun:
+                        normal.save()
+                    print("{0} from {1} to {2}".format(normal.timestamp, previous_normal_info_timestamp, None))
+                    normal = next(normal_iterator)
+           
+            if normal.info is not None:
+                previous_normal_info_timestamp = normal.info.timestamp
+            else:
+                previous_normal_info_timestamp = None
+
+            normal.info = current_image
+            image_index += 1
+            current_image = images[image_index]
+            print("{0} from {1} to {2} [{3}]".format(normal.timestamp, previous_normal_info_timestamp,
+                                                     normal.info.timestamp, diff_seconds))
+            if not dryrun:
+                normal.save()
+            
+            
 class Product(models.Model):
     ALLNIGHT     = 1
     ALLNIGHT_NEG = 2
