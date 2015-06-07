@@ -8,6 +8,7 @@ from util import normalize_time, record_size
 from PIL import Image, ImageOps, ImageChops, ImageDraw
 import os.path
 import math
+import shutil
 
 APP_DIR = 'images'
 
@@ -194,7 +195,7 @@ def make_all_day_image(day):
         if img_dark is None:
             img_dark = source
         else:
-            img_dark = ImageChops.darker(img_light, source)
+            img_dark = ImageChops.darker(img_dark, source)
 
     # Put a date on the image
     daystr = day.strftime('%Y-%m-%d')
@@ -215,10 +216,30 @@ def make_all_day_image(day):
 
     img_filepath = os.path.join(imagepath, filename_light)
     img_light.save(img_filepath)
-    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_LIGHT, imagepath, filename)
+    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_LIGHT, imagepath, filename_light)
     record_size(img_filepath, image_record)
 
     img_filepath = os.path.join(imagepath, filename_dark)
     img_dark.save(img_filepath)
-    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_DARK, imagepath, filename)
+    image_record = get_image_product(day_start, start_time, end_time, Product.ALLDAY_DARK, imagepath, filename_dark)
     record_size(img_filepath, image_record)
+
+
+@task
+def copy_all_day_images(day, dirpath):
+    # Normalize to midnight
+    day_start = datetime(day.year, day.month, day.day, tzinfo=est)
+
+    # Find that day's sunrise and sunset
+    obs = get_observer()
+    sunrise_time = sunrise(obs, day_start)
+    sunset_time = sunset(obs, day_start)
+
+    start_time = sunrise_time + timedelta(minutes=60)
+    end_time = sunset_time - timedelta(minutes=60)
+
+    normals = Normal.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time, info__isnull=False)
+
+    for normal in normals:
+        print normal.info.filename
+        shutil.copyfile(normal.info.filepath, os.path.join(dirpath, normal.info.filename))
