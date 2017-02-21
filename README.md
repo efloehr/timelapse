@@ -3,6 +3,8 @@
 Caution! This codebase is currently in transition. I am working on cleaning it up.
 Eventually I hope to have documentation on the setup so that you can use this code more easily.
 
+To start, the camera directory contains everything for the Raspberry Pi.
+
 ## Video links
 
 [400 Sunsets](https://vimeo.com/108564606)
